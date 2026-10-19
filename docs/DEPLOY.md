@@ -40,8 +40,7 @@ inteira é melhor do que suavizar a resposta.
 | `index.html` | "+16 anos" e "+1.000 empresas" — confirmar se seguem corretos |
 | `index.html` | JSON-LD: endereço completo (hoje só cidade/UF) |
 | `pages/politica-de-privacidade.html` | Versão **provisória**: revisar com o jurídico e completar CNPJ e endereço |
-| `pages/login.html` | "Esqueceu sua senha?" é `href="#"` — não existe recuperação de senha ainda |
-| `pages/portal-*.html` | Itens "Comunicados" e "Atendimentos" do menu, "Ver todas" e atalhos do Início são `href="#"` — páginas ainda não construídas (ver `TODO` em `pages/portal-inicio.html`) |
+| Railway | `SMTP_USUARIO`/`SMTP_SENHA` — sem eles, "Esqueceu sua senha?" não envia e-mail (seção 3) |
 
 Já resolvido: domínio real em canonical/Open Graph/`robots.txt`/`sitemap.xml`,
 e-mail de contato (`contato@facchiniassessoria.com.br`), WhatsApp e Instagram.
@@ -109,6 +108,7 @@ Sobe a pasta respeitando o `.gitignore` (nunca envia `.env`, banco, `venv` ou
 | `ENV` | `production` — cookie só via HTTPS e cabeçalho HSTS |
 | `FACCHINI_DB_PATH` | `/data/facchini.db` — o banco fica no volume |
 | `PORT` | `8080` — mesma porta configurada nos domínios |
+| `SMTP_USUARIO`, `SMTP_SENHA` | Caixa que envia os e-mails de "Esqueceu sua senha?" (ex.: `notificacao@facchiniassessoria.com.br`). Opcionais, com padrão: `SMTP_HOST` (`email-ssl.com.br`), `SMTP_PORT` (`465`), `EMAIL_REMETENTE`, `URL_PORTAL` |
 
 Segredos são definidos por quem tem o valor, direto no terminal, sem exibi-lo:
 
@@ -160,8 +160,14 @@ isso ele fica na Locaweb, redirecionando (seção 5).
 
 Não existe autocadastro (decisão de produto): contas são criadas pelo
 administrador, rodando scripts dentro do servidor. Toda conta criada ou com
-senha redefinida pelo administrador recebe uma **senha temporária aleatória**
-(nunca uma senha fixa) e é obrigada a trocá-la no primeiro acesso.
+senha redefinida pelo administrador nasce com **troca obrigatória**: enquanto
+a senha provisória não for trocada, o servidor bloqueia portal e painel
+(páginas e APIs) e manda para `pages/trocar-senha.html`
+(`exigir_troca_de_senha` em `backend/app.py`). O cliente também pode criar a
+própria senha pelo "Esqueceu sua senha?" (link por e-mail, vale 1 hora).
+
+As contas do lote inicial (223 clientes e 4 da equipe, migradas em
+19/10/2026) usam a senha provisória comum do escritório.
 
 Em produção, os scripts rodam dentro do container do Railway, que enxerga o
 volume e as variáveis:
