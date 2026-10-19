@@ -13,13 +13,20 @@ CAMINHO_DB = Path(os.environ.get("FACCHINI_DB_PATH") or Path(__file__).parent / 
 
 
 def obter_conexao() -> sqlite3.Connection:
-    conexao = sqlite3.connect(CAMINHO_DB)
+    conexao = sqlite3.connect(CAMINHO_DB, timeout=10)
     conexao.row_factory = sqlite3.Row
+    # Com WAL (ligado em inicializar_schema), NORMAL é seguro e evita um
+    # fsync por escrita.
+    conexao.execute("PRAGMA synchronous = NORMAL")
     return conexao
 
 
 def inicializar_schema() -> None:
     with obter_conexao() as conexao:
+        # WAL: leituras não esperam escritas e vice-versa — várias requisições
+        # e tarefas em segundo plano tocam o banco ao mesmo tempo. Fica gravado
+        # no próprio arquivo, então basta ligar uma vez.
+        conexao.execute("PRAGMA journal_mode = WAL")
         conexao.execute("""
             CREATE TABLE IF NOT EXISTS usuarios (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -22,3 +22,8 @@ backend/*.db-journal
 
 # Pasta gerada por scripts/montar-locaweb.sh pra subir por FTP
 deploy-locaweb/
+
+# Cópias de trabalho dos agentes e arquivos auxiliares do SQLite em modo WAL
+.claude/worktrees/
+backend/*.db-wal
+backend/*.db-shm

@@ -22,6 +22,7 @@ from fastapi import BackgroundTasks, FastAPI, File, Form, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.concurrency import run_in_threadpool
 from starlette.middleware.sessions import SessionMiddleware
 
 load_dotenv()  # precisa rodar antes de importar acessorias (lê env em cada chamada, mas o token já deve estar carregado)
@@ -71,6 +72,50 @@ if not SECRET_SESSAO:
     SECRET_SESSAO = secrets.token_hex(32)
 
 app = FastAPI()
+
+# Rotas de autenticação que precisam funcionar mesmo com a troca pendente.
+ROTAS_LIVRES_TROCA = {
+    "/api/login", "/api/trocar-senha", "/api/esqueci-senha", "/api/redefinir-senha",
+    "/api/redefinir-senha/validar", "/api/contato",
+    "/pages/equipe-login.html", "/api/equipe/login", "/api/equipe/trocar-senha",
+}
+
+
+def _troca_pendente(request: Request) -> str | None:
+    """'cliente' ou 'equipe' quando a área pedida exige trocar antes a senha
+    provisória. É checado aqui, num ponto só, e não em cada rota: com a
+    senha provisória comum, qualquer pessoa que a conheça entraria na conta
+    de um cliente que ainda não trocou — então nenhum dado sai antes da troca,
+    e rotas novas já nascem protegidas."""
+    caminho = request.url.path
+    if caminho in ROTAS_LIVRES_TROCA:
+        return None
+    sessao = request.session
+    if caminho.startswith(("/pages/equipe-", "/api/equipe/")):
+        pendente = sessao.get("funcionario_id") and sessao.get("funcionario_deve_trocar_senha")
+        return "equipe" if pendente else None
+    if caminho.startswith(("/pages/portal-", "/api/")) or caminho == "/pages/selecionar-empresa.html":
+        pendente = sessao.get("usuario_id") and sessao.get("deve_trocar_senha")
+        return "cliente" if pendente else None
+    return None
+
+
+# Registrado ANTES do SessionMiddleware de propósito: o último registrado é
+# o mais externo, e este precisa rodar por dentro dele pra enxergar a sessão.
+@app.middleware("http")
+async def exigir_troca_de_senha(request: Request, call_next):
+    area = _troca_pendente(request)
+    if area:
+        destino = "trocar-senha.html?equipe" if area == "equipe" else "trocar-senha.html"
+        if request.url.path.startswith("/api/"):
+            return JSONResponse(
+                {"erro": "Troque sua senha provisória antes de continuar.", "destino": destino},
+                status_code=403,
+            )
+        return RedirectResponse(f"/pages/{destino}", status_code=303)
+    return await call_next(request)
+
+
 app.add_middleware(
     SessionMiddleware,
     secret_key=SECRET_SESSAO,
@@ -138,7 +183,7 @@ async def login(request: Request):
             "SELECT id, nome, senha_hash, deve_trocar_senha FROM usuarios WHERE email = ?", (email,)
         ).fetchone()
 
-        if not verificar_senha(senha, usuario["senha_hash"] if usuario else None):
+        if not await run_in_threadpool(verificar_senha, senha, usuario["senha_hash"] if usuario else None):
             registrar_falha_login(email, ip)
             return JSONResponse({"erro": "Usuário ou senha incorretos."}, status_code=401)
 
@@ -163,12 +208,18 @@ async def login(request: Request):
     # empresa_ativa fica vazia até o cliente escolher.
     if len(empresas) == 1:
         request.session["empresa_ativa"] = empresas[0]
-        destino = "portal-inicio.html"
     else:
         request.session["empresa_ativa"] = None
-        destino = "selecionar-empresa.html" if empresas else "portal-inicio.html"
 
-    return {"ok": True, "destino": destino}
+    if deve_trocar_senha:
+        return {"ok": True, "destino": "trocar-senha.html"}
+    return {"ok": True, "destino": _destino_cliente(request)}
+
+
+def _destino_cliente(request: Request) -> str:
+    if request.session.get("empresa_ativa") or len(request.session.get("empresas", [])) <= 1:
+        return "portal-inicio.html"
+    return "selecionar-empresa.html"
 
 
 @app.post("/api/trocar-senha")
@@ -187,7 +238,7 @@ async def trocar_senha(request: Request):
     # login futuro — mas se só fechar sem trocar, volta a aparecer na
     # próxima vez que entrar (deve_trocar_senha continua 1 no banco).
     request.session["deve_trocar_senha"] = False
-    return {"ok": True}
+    return {"ok": True, "destino": _destino_cliente(request)}
 
 
 @app.post("/api/selecionar-empresa")
@@ -239,7 +290,7 @@ async def equipe_login(request: Request):
             "SELECT id, nome, senha_hash, deve_trocar_senha FROM funcionarios WHERE email = ?", (email,)
         ).fetchone()
 
-    if not verificar_senha(senha, funcionario["senha_hash"] if funcionario else None):
+    if not await run_in_threadpool(verificar_senha, senha, funcionario["senha_hash"] if funcionario else None):
         registrar_falha_login(email, ip)
         return JSONResponse({"erro": "Usuário ou senha incorretos."}, status_code=401)
 
@@ -248,6 +299,8 @@ async def equipe_login(request: Request):
     request.session["funcionario_id"] = funcionario["id"]
     request.session["funcionario_nome"] = funcionario["nome"]
     request.session["funcionario_deve_trocar_senha"] = bool(funcionario["deve_trocar_senha"])
+    if funcionario["deve_trocar_senha"]:
+        return {"ok": True, "destino": "trocar-senha.html?equipe"}
     return {"ok": True, "destino": "equipe-atendimento.html"}
 
 
@@ -266,7 +319,7 @@ async def equipe_trocar_senha(request: Request):
         return erro
 
     request.session["funcionario_deve_trocar_senha"] = False
-    return {"ok": True}
+    return {"ok": True, "destino": "equipe-atendimento.html"}
 
 
 @app.get("/equipe/logout")
@@ -1197,7 +1250,6 @@ import re  # noqa: E402
 from contextlib import closing  # noqa: E402
 from datetime import timedelta, timezone  # noqa: E402
 
-from starlette.concurrency import run_in_threadpool  # noqa: E402
 
 LIMITE_CONTATO_POR_IP_HORA = 5
 # Rede de segurança caso alguém troque de IP (ou forje X-Forwarded-For) pra
@@ -1310,9 +1362,7 @@ async def api_contato(request: Request):
     if not isinstance(corpo, dict):
         return JSONResponse({"erro": "Formato de envio inválido."}, status_code=400)
 
-    # Atrás do proxy do Railway, o uvicorn (--proxy-headers) já põe aqui o
-    # IP do visitante vindo de X-Forwarded-For.
-    ip = (request.client.host if request.client else "") or "desconhecido"
+    ip = _ip_cliente(request)
     user_agent = request.headers.get("user-agent", "")[:300]
 
     # Armadilha anti-robô (campo "site" escondido): responde como sucesso
@@ -1459,9 +1509,14 @@ async def api_alternar_lead_contatado(request: Request):
 # --- Senha: troca, "esqueceu sua senha?" e primeiro acesso por e-mail -----
 
 def _ip_cliente(request: Request) -> str:
-    # Atrás do proxy do Railway o uvicorn roda com --proxy-headers, então
-    # request.client.host já é o IP real de quem acessou.
-    return request.client.host if request.client else "desconhecido"
+    # Em produção o IP vem do X-Real-IP, que a borda do Railway preenche.
+    # Nunca de X-Forwarded-For: o visitante consegue mandar esse cabeçalho
+    # já preenchido e burlar os limites por IP.
+    if HTTPS_ONLY:
+        ip = request.headers.get("x-real-ip", "").strip()
+        if ip:
+            return ip[:64]
+    return (request.client.host if request.client else "") or "desconhecido"
 
 
 async def _corpo_json(request: Request) -> dict:
@@ -1521,20 +1576,21 @@ async def _trocar_senha_da_conta(
                 {"erro": "Muitas tentativas. Aguarde alguns minutos e tente de novo.", "exigeSenhaAtual": True},
                 status_code=429,
             )
-        if not verificar_senha(senha_atual, conta["senha_hash"]):
+        if not await run_in_threadpool(verificar_senha, senha_atual, conta["senha_hash"]):
             registrar_falha_login(conta["email"], ip)
             return JSONResponse({"erro": "Senha atual incorreta.", "exigeSenhaAtual": True}, status_code=400)
 
     # Principalmente com a senha provisória comum do lote inicial
     # (criar_usuarios_em_massa.py --senha-comum): "trocar" pela mesma senha
     # deixaria a conta aberta pra qualquer outro cliente que a conhece.
-    if verificar_senha(nova_senha, conta["senha_hash"]):
+    if await run_in_threadpool(verificar_senha, nova_senha, conta["senha_hash"]):
         return JSONResponse({"erro": "A nova senha precisa ser diferente da atual."}, status_code=400)
 
+    novo_hash = await run_in_threadpool(gerar_hash, nova_senha)
     with obter_conexao() as conexao:
         conexao.execute(
             f"UPDATE {tabela} SET senha_hash = ?, deve_trocar_senha = 0 WHERE id = ?",
-            (gerar_hash(nova_senha), conta_id),
+            (novo_hash, conta_id),
         )
     return None
 
@@ -1605,7 +1661,7 @@ async def redefinir_senha(request: Request):
     if erro:
         return erro
 
-    resultado = consumir_token_redefinicao(token, nova_senha)
+    resultado = await run_in_threadpool(consumir_token_redefinicao, token, nova_senha)
     if not resultado:
         return JSONResponse(
             {"erro": "Este link é inválido, já foi usado ou expirou. Peça um novo.", "linkInvalido": True},
