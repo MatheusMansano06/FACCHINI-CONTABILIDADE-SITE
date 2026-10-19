@@ -32,8 +32,10 @@
 
 <!-- Reaproveita a casca do portal do cliente (.portal, .cartao, tabela,
      etiquetas, filtro-status, aviso-senha) — mesmo visual, sessão e menu
-     completamente separados. Nenhuma regra nova precisou ser criada. -->
+     completamente separados. equipe-atendimento.css só acrescenta o que
+     é exclusivo daqui (paginação, detalhe/histórico, formulário de resposta). -->
 <link rel="stylesheet" href="../css/portal-shell.css">
+<link rel="stylesheet" href="../css/equipe-atendimento.css">
 </head>
 
 <body>
@@ -118,9 +120,8 @@
       <img src="../assets/logo/facchini-logo-branco.webp" width="640" height="133" alt="Facchini Assessoria Contábil">
     </a>
 
-    <!-- Só existe uma tela nesta v1 (a equipe só visualiza, ainda não
-         responde por aqui) — o nav não precisa de mais itens até isso
-         mudar. -->
+    <!-- Só existe uma tela: a fila (responder acontece dentro dela, no
+         detalhe de cada solicitação) — o nav não precisa de mais itens. -->
     <nav class="portal__nav" aria-label="Navegação do painel">
       <a class="portal__nav-item esta-ativo" href="equipe-atendimento.html" aria-current="page">
         <svg class="icone" aria-hidden="true"><use href="#i-atendimentos"/></svg> Atendimento
@@ -145,7 +146,7 @@
 
       <div class="portal__saudacao">
         <h1>Central de Atendimento</h1>
-        <p>Todas as solicitações abertas na Facchini — mais urgentes e mais antigas primeiro.</p>
+        <p>Solicitações de todas as empresas — abra uma para ver o histórico e responder.</p>
       </div>
 
       <button class="portal__sino" type="button" aria-label="Notificações">
@@ -179,26 +180,35 @@
               <svg class="icone" aria-hidden="true"><use href="#i-atendimentos"/></svg>
               Fila de solicitações
             </h2>
-            <p class="cartao__subtitulo">{{ atendimentos|length }} solicitação(ões) — ordenadas por prioridade e tempo de espera.</p>
+            <p class="cartao__subtitulo">
+              Página {{ pagina }} · {{ atendimentos|length }} solicitação(ões) nesta página — ordenadas por prioridade e tempo de espera.
+            </p>
           </div>
-          <!-- Sem JavaScript, os selects ficam visíveis mas não filtram
-               nada — a tabela inteira continua legível. -->
-          <div class="cartao__filtros">
-            <select class="filtro-status" data-filtro-prioridade aria-label="Filtrar por prioridade">
+          <!-- Status filtra na própria Acessórias (vale pra fila inteira,
+               funciona sem JavaScript pelo botão "Filtrar"). Prioridade
+               filtra só a página atual, no navegador — a Acessórias não
+               tem filtro de prioridade. -->
+          <form class="cartao__filtros" method="get" action="equipe-atendimento.html" data-formulario-filtro>
+            <select class="filtro-status" data-filtro-prioridade aria-label="Filtrar esta página por prioridade" hidden>
               <option value="">Todas as prioridades</option>
               <option value="Muito alta">Muito alta</option>
               <option value="Alta">Alta</option>
               <option value="Média">Média</option>
               <option value="Baixa">Baixa</option>
             </select>
-            <select class="filtro-status" data-filtro-status aria-label="Filtrar por status">
+            <select class="filtro-status" name="status" data-filtro-status aria-label="Filtrar por status">
               <option value="">Todos os status</option>
-              <option value="andamento">Em andamento</option>
-              <option value="respondido">Respondido pelo cliente</option>
-              <option value="concluido">Finalizada</option>
+              {% for codigo, rotulo in opcoes_status.items() %}
+              <option value="{{ codigo }}"{% if codigo == status_filtro %} selected{% endif %}>{{ rotulo }}</option>
+              {% endfor %}
             </select>
-          </div>
+            <button class="filtro-status" type="submit" data-botao-filtrar>Filtrar</button>
+          </form>
         </div>
+
+        {% if falha_acessorias %}
+        <p class="atendimento-aviso" role="alert">Não conseguimos falar com a Acessórias agora — a lista abaixo pode estar incompleta. Recarregue a página em alguns instantes.</p>
+        {% endif %}
 
         <div class="tabela-scroll">
           <table class="tabela-documentos">
@@ -210,28 +220,126 @@
                 <th scope="col">Há quantos dias</th>
                 <th scope="col">Prioridade</th>
                 <th scope="col">Status</th>
+                <th scope="col"><span class="atendimento-sr">Ações</span></th>
               </tr>
             </thead>
             <tbody data-tabela-atendimentos>
               {% for item in atendimentos %}
-              <tr data-status="{{ item.classe_status }}" data-prioridade="{{ item.prioridade }}">
+              <tr data-status="{{ item.classe_status }}" data-prioridade="{{ item.prioridade }}" data-solicitacao="{{ item.id }}">
                 <td>{{ item.empresa }}</td>
                 <td>{{ item.assunto }}</td>
                 <td>{{ item.data }}</td>
                 <td>{{ item.dias_aberto if item.dias_aberto is not none else "—" }}</td>
                 <td><span class="etiqueta-status etiqueta-status--{{ item.classe_prioridade }}">{{ item.prioridade }}</span></td>
-                <td><span class="etiqueta-status etiqueta-status--{{ item.classe_status }}">{{ item.status }}</span></td>
+                <td><span class="etiqueta-status etiqueta-status--{{ item.classe_status }}" data-etiqueta-status>{{ item.status }}</span></td>
+                <td class="atendimento-acoes">
+                  <!-- Responder depende de JavaScript (busca o histórico
+                       sob demanda) — o botão só aparece quando ele roda. -->
+                  <button class="atendimento-abrir" type="button" aria-expanded="false" hidden data-abrir-detalhe>
+                    Abrir
+                  </button>
+                </td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="6">Nenhuma solicitação aberta no momento.</td>
+                <td colspan="7">
+                  {% if pagina > 1 %}Nenhuma solicitação nesta página. <a href="equipe-atendimento.html?{{ {'status': status_filtro}|urlencode }}">Voltar para a primeira página</a>.
+                  {% elif status_filtro %}Nenhuma solicitação com esse status.
+                  {% else %}Nenhuma solicitação no momento.{% endif %}
+                </td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
-          <p class="tabela-documentos__vazio" hidden data-atendimentos-vazio>Nenhuma solicitação com esse filtro.</p>
+          <p class="tabela-documentos__vazio" hidden data-atendimentos-vazio>Nenhuma solicitação com essa prioridade nesta página.</p>
         </div>
+
+        {% if tem_anterior or tem_proxima %}
+        <nav class="atendimento-paginacao" aria-label="Páginas da fila">
+          {% if tem_anterior %}
+          <a class="atendimento-paginacao__link" rel="prev" href="equipe-atendimento.html?{{ {'pagina': pagina - 1, 'status': status_filtro}|urlencode }}">← Anterior</a>
+          {% else %}
+          <span class="atendimento-paginacao__link" aria-disabled="true">← Anterior</span>
+          {% endif %}
+          <span class="atendimento-paginacao__atual">Página {{ pagina }}{% if tem_proxima %} · há mais solicitações{% endif %}</span>
+          {% if tem_proxima %}
+          <a class="atendimento-paginacao__link" rel="next" href="equipe-atendimento.html?{{ {'pagina': pagina + 1, 'status': status_filtro}|urlencode }}">Próxima →</a>
+          {% else %}
+          <span class="atendimento-paginacao__link" aria-disabled="true">Próxima →</span>
+          {% endif %}
+        </nav>
+        {% endif %}
       </section>
+
+      <!-- Molde do painel de detalhe (histórico + resposta). O JS clona
+           isto e preenche só com textContent — nada de innerHTML. -->
+      <template data-modelo-detalhe>
+        <tr class="atendimento-detalhe" data-detalhe>
+          <td colspan="7">
+            <div class="atendimento-detalhe__caixa">
+              <p class="atendimento-detalhe__estado" role="status" data-detalhe-estado>Carregando histórico…</p>
+
+              <div class="atendimento-detalhe__conteudo" hidden data-detalhe-conteudo>
+                <dl class="atendimento-detalhe__resumo">
+                  <div><dt>Departamento</dt><dd data-campo="departamento"></dd></div>
+                  <div><dt>Tipo</dt><dd data-campo="tipo"></dd></div>
+                  <div><dt>Solicitante</dt><dd data-campo="solicitante"></dd></div>
+                  <div><dt>Responsáveis</dt><dd data-campo="responsaveis"></dd></div>
+                  <div><dt>Aberta em</dt><dd data-campo="abertura"></dd></div>
+                  <div><dt>Prazo</dt><dd data-campo="prazo"></dd></div>
+                </dl>
+
+                <h3 class="atendimento-detalhe__titulo">Histórico</h3>
+                <ol class="atendimento-historico" data-historico></ol>
+
+                <form class="atendimento-resposta" method="post" action="#" novalidate data-formulario-resposta>
+                  <h3 class="atendimento-detalhe__titulo">Responder e atualizar</h3>
+
+                  <div class="campo">
+                    <label data-rotulo="comentario">Comentário</label>
+                    <div class="campo__caixa campo__caixa--area">
+                      <textarea name="comentario" rows="4" maxlength="5000" required
+                                placeholder="Escreva a resposta ou a observação — a Acessórias exige um comentário a cada atualização."></textarea>
+                    </div>
+                  </div>
+
+                  <div class="atendimento-resposta__linha">
+                    <div class="campo">
+                      <label data-rotulo="status">Novo status</label>
+                      <div class="campo__caixa">
+                        <select name="status" required>
+                          <option value="R">Resolvendo</option>
+                          <option value="C" data-opcao-cliente>Com o cliente (aguardando retorno)</option>
+                          <option value="F" data-opcao-finalizar>Finalizada</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="campo">
+                      <label data-rotulo="prazo">Novo prazo (opcional)</label>
+                      <div class="campo__caixa">
+                        <input type="date" name="prazo">
+                      </div>
+                    </div>
+                  </div>
+
+                  <label class="atendimento-resposta__privado" data-campo-privado>
+                    <input type="checkbox" name="privado"> Comentário interno — o cliente não vê
+                  </label>
+                  <p class="atendimento-resposta__nota" hidden data-aviso-reabrir>
+                    Esta solicitação está finalizada — enviar com Resolvendo ou Com o cliente vai reabri-la.
+                  </p>
+
+                  <div class="atendimento-resposta__acoes">
+                    <button class="botao botao--ouro" type="submit">Enviar atualização</button>
+                    <p class="atendimento-resposta__retorno" role="status" aria-live="polite" data-retorno-resposta></p>
+                  </div>
+                  <p class="atendimento-resposta__nota">Atribuir responsável não é possível por aqui — a API da Acessórias não oferece isso.</p>
+                </form>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </template>
 
     </main>
   </div>

@@ -499,12 +499,31 @@ def _formatar_atendimento_equipe(bruto: list[dict]) -> list[dict]:
     return atendimentos
 
 
-async def _montar_contexto_atendimento(request: Request) -> dict:
-    solicitacoes_brutas = await acessorias.listar_todas_solicitacoes()
+# Filtro de status do painel -> filtro SolStatus da própria Acessórias
+# (documentação de GET /requests). Filtrar lá, não no navegador: com a
+# fila paginada, um filtro só no navegador esconderia linhas da página
+# atual e daria a impressão errada de que não há mais nenhuma.
+FILTROS_STATUS_ATENDIMENTO = {
+    "A": "Nova",
+    "P": "Resolvendo",
+    "C": "Com o cliente",
+    "F": "Finalizada",
+}
+MAXIMO_PAGINAS_ATENDIMENTO = 50  # 50 x 100 = 5.000 solicitações; além disso é URL forjada
+
+
+async def _montar_contexto_atendimento(request: Request, pagina: int = 1, status: str = "") -> dict:
+    fila = await acessorias.listar_fila_solicitacoes(pagina=pagina, status=status or None)
     return {
         "nome_usuario": request.session.get("funcionario_nome", "equipe"),
         "deve_trocar_senha": bool(request.session.get("funcionario_deve_trocar_senha")),
-        "atendimentos": _formatar_atendimento_equipe(solicitacoes_brutas),
+        "atendimentos": _formatar_atendimento_equipe(fila["solicitacoes"]),
+        "pagina": pagina,
+        "tem_anterior": pagina > 1,
+        "tem_proxima": fila["tem_mais"] and pagina < MAXIMO_PAGINAS_ATENDIMENTO,
+        "falha_acessorias": fila["falhou"],
+        "status_filtro": status,
+        "opcoes_status": FILTROS_STATUS_ATENDIMENTO,
     }
 
 
@@ -806,7 +825,18 @@ async def pagina_equipe_atendimento(request: Request):
     guarda = _guarda_equipe(request)
     if guarda:
         return guarda
-    contexto = await _montar_contexto_atendimento(request)
+    # ?pagina=N&status=X — inválido cai no padrão em vez de dar erro
+    # (mesmo critério do ?ano/?mes do calendário).
+    try:
+        pagina = int(request.query_params.get("pagina", "1"))
+        if not 1 <= pagina <= MAXIMO_PAGINAS_ATENDIMENTO:
+            raise ValueError
+    except ValueError:
+        pagina = 1
+    status = request.query_params.get("status", "")
+    if status not in FILTROS_STATUS_ATENDIMENTO:
+        status = ""
+    contexto = await _montar_contexto_atendimento(request, pagina, status)
     return templates.TemplateResponse(request, "equipe-atendimento.html", contexto)
 
 
@@ -1588,6 +1618,155 @@ async def redefinir_senha(request: Request):
         # Provou que é dono da caixa de e-mail — destrava o login dele.
         limpar_falhas_login(email)
     return {"ok": True, "destino": "equipe-login.html" if tipo == "equipe" else "login.html"}
+
+# --- Painel da equipe: detalhe e resposta de solicitação ----------------
+# Tudo aqui exige sessão de FUNCIONÁRIO (_tem_sessao_equipe) — sessão de
+# cliente não serve. O SolID vem da URL, mas só aceita dígitos: nunca
+# monta caminho da Acessórias com texto livre do navegador.
+
+STATUS_EDICAO_SOLICITACAO = {"R", "C", "F"}  # Resolvendo, Cliente, Finalizada (documentação de POST /requests/{id})
+TAMANHO_MAXIMO_COMENTARIO = 5000
+TAMANHO_MAXIMO_CORPO_JSON = 32 * 1024
+
+
+def _sol_id_valido(sol_id: str) -> bool:
+    return sol_id.isascii() and sol_id.isdigit() and len(sol_id) <= 12
+
+
+def _data_solicitacao(texto: str) -> date | None:
+    """A Acessórias manda datas de solicitação como "DD/MM/AAAA HH:MM:SS";
+    prazo pode vir só com a data, e às vezes em ISO — aceita os três."""
+    texto = (texto or "").strip()
+    return _data(texto.split(" ")[0], "%d/%m/%Y") or _data(texto[:10])
+
+
+def _formatar_detalhe_solicitacao(item: dict) -> dict:
+    # O texto dos comentários vem da Acessórias já escapado como HTML
+    # ("MARTINS &amp; GUERRA") — desfaz aqui; o navegador mostra tudo via
+    # textContent, então nada disso vira HTML de verdade.
+    from html import unescape
+
+    status = item.get("SolStatus", "")
+    prazo = _data_solicitacao(item.get("SolDTPrazo", ""))
+    interacoes = []
+    for cmt in item.get("SolInteracoes", []):
+        anexos = [
+            {"nome": str(anexo.get("Nome") or "Anexo"), "url": anexo["Url"]}
+            for anexo in (cmt.get("CmtAnx") or [])
+            if isinstance(anexo, dict) and str(anexo.get("Url", "")).startswith("https://")
+        ]
+        interacoes.append({
+            "autor": unescape(str(cmt.get("CmtUsuario", ""))),
+            "data": cmt.get("CmtDH", ""),
+            "privado": cmt.get("CmtTipo", "") != "Público",
+            "texto": unescape(str(cmt.get("CmtText", ""))),
+            "anexos": anexos,
+        })
+    responsaveis = item.get("SolOfficeResp") or []
+    return {
+        "id": item.get("SolID", ""),
+        "assunto": item.get("SolAssunto", ""),
+        "empresa": item.get("EmpNome") or item.get("EmpCNPJ", ""),
+        "departamento": item.get("DptoNome", ""),
+        "tipo": item.get("SolTipo", ""),
+        "interna": item.get("SolTipo", "") == "Interna",
+        "solicitante": item.get("SolUsuario", ""),
+        "responsaveis": ", ".join(str(r) for r in responsaveis) if isinstance(responsaveis, list) else str(responsaveis),
+        "abertura": item.get("SolDHAbertura", ""),
+        "ultima_atualizacao": item.get("SolDHUAt", ""),
+        "prazo": prazo.strftime("%d/%m/%Y") if prazo else "",
+        "status": status,
+        "classe_status": _STATUS_PARA_CLASSE.get(status, "andamento"),
+        "finalizada": status == "Finalizada",
+        "interacoes": interacoes,
+    }
+
+
+@app.get("/api/equipe/solicitacoes/{sol_id}")
+async def api_equipe_detalhe_solicitacao(request: Request, sol_id: str):
+    if not _tem_sessao_equipe(request):
+        return JSONResponse({"erro": "Sessão expirada. Faça login de novo."}, status_code=401)
+    if not _sol_id_valido(sol_id):
+        return JSONResponse({"erro": "Solicitação inválida."}, status_code=400)
+
+    item = await acessorias.buscar_solicitacao(sol_id)
+    if not item:
+        return JSONResponse(
+            {"erro": "Não conseguimos carregar esta solicitação na Acessórias. Tente de novo."}, status_code=502
+        )
+    return {"ok": True, "solicitacao": _formatar_detalhe_solicitacao(item)}
+
+
+@app.post("/api/equipe/solicitacoes/{sol_id}/atualizar")
+async def api_equipe_atualizar_solicitacao(request: Request, sol_id: str):
+    """Comentar + definir status (e opcionalmente prazo) num envio só —
+    a Acessórias exige as duas coisas juntas. Se a solicitação estiver
+    finalizada e o status escolhido não for "Finalizada", manda
+    reabrir=1 sozinho: é isso que a equipe quis dizer."""
+    if not _tem_sessao_equipe(request):
+        return JSONResponse({"erro": "Sessão expirada. Faça login de novo."}, status_code=401)
+    if not _sol_id_valido(sol_id):
+        return JSONResponse({"erro": "Solicitação inválida."}, status_code=400)
+    # Só JSON: um <form> de outro site não consegue mandar
+    # application/json sem passar pelo preflight de CORS (que não
+    # liberamos) — defesa extra além do SameSite=Lax do cookie.
+    if not request.headers.get("content-type", "").startswith("application/json"):
+        return JSONResponse({"erro": "Formato de envio inválido."}, status_code=415)
+    try:
+        if int(request.headers.get("content-length", "0")) > TAMANHO_MAXIMO_CORPO_JSON:
+            return JSONResponse({"erro": "Comentário grande demais."}, status_code=413)
+        corpo = await request.json()
+    except ValueError:
+        return JSONResponse({"erro": "Formato de envio inválido."}, status_code=400)
+    if not isinstance(corpo, dict):
+        return JSONResponse({"erro": "Formato de envio inválido."}, status_code=400)
+
+    comentario = str(corpo.get("comentario", "")).strip()
+    status_sol = str(corpo.get("status", ""))
+    privado = corpo.get("privado") is True
+    prazo_texto = str(corpo.get("prazo", "") or "").strip()
+
+    if not comentario:
+        return JSONResponse({"erro": "Escreva um comentário — a Acessórias exige um ao atualizar."}, status_code=400)
+    if len(comentario) > TAMANHO_MAXIMO_COMENTARIO:
+        return JSONResponse(
+            {"erro": f"Comentário passa de {TAMANHO_MAXIMO_COMENTARIO} caracteres — resuma um pouco."}, status_code=400
+        )
+    if status_sol not in STATUS_EDICAO_SOLICITACAO:
+        return JSONResponse({"erro": "Escolha um status válido."}, status_code=400)
+    prazo = None
+    if prazo_texto:
+        prazo_data = _data(prazo_texto)
+        if not prazo_data or len(prazo_texto) != 10:
+            return JSONResponse({"erro": "Prazo inválido."}, status_code=400)
+        prazo = prazo_data.isoformat()
+
+    # Lido do cache na maioria das vezes (a equipe acabou de abrir o
+    # detalhe) — confirma que a solicitação existe e diz se precisa reabrir.
+    atual = await acessorias.buscar_solicitacao(sol_id)
+    if not atual:
+        return JSONResponse(
+            {"erro": "Não conseguimos carregar esta solicitação na Acessórias. Tente de novo."}, status_code=502
+        )
+    finalizada = atual.get("SolStatus") == "Finalizada"
+    if finalizada and status_sol == "F":
+        return JSONResponse(
+            {"erro": "Esta solicitação já está finalizada. Para reabrir, escolha Resolvendo ou Com o cliente."},
+            status_code=400,
+        )
+    if status_sol == "C" and atual.get("SolTipo") == "Interna":
+        return JSONResponse({"erro": "Solicitação interna não pode ficar com o status Com o cliente."}, status_code=400)
+
+    resultado = await acessorias.atualizar_solicitacao(
+        sol_id, comentario, status_sol, privado=privado, reabrir=finalizada, data_prazo=prazo,
+    )
+    if "Erro" in resultado:
+        return JSONResponse({"erro": resultado["Erro"]}, status_code=400)
+
+    # Devolve o detalhe já atualizado (o cache foi invalidado na escrita),
+    # pra tela redesenhar o histórico e a etiqueta de status sem outro clique.
+    novo = await acessorias.buscar_solicitacao(sol_id)
+    return {"ok": True, "solicitacao": _formatar_detalhe_solicitacao(novo) if novo else None}
 
 
 # Um app só para os dois domínios: www.facchiniassessoria.com.br é a lead
