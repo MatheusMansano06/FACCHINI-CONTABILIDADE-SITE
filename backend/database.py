@@ -146,6 +146,17 @@ def inicializar_schema() -> None:
         conexao.execute(
             "CREATE INDEX IF NOT EXISTS idx_comunicados_empresa ON comunicados (empresa_digitos, removido_em)"
         )
+        # Sino do topo do portal: até qual comunicado (id) cada cliente já
+        # viu. Abrir portal-comunicados.html avança a marca; o sino mostra o
+        # ponto enquanto houver comunicado visível com id maior que ela. Um
+        # número por conta (não por empresa) — id só cresce, então basta.
+        conexao.execute("""
+            CREATE TABLE IF NOT EXISTS comunicados_vistos (
+                usuario_id INTEGER PRIMARY KEY,
+                visto_ate_id INTEGER NOT NULL DEFAULT 0,
+                atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
 
         # Leads do formulário de contato da landing page (POST /api/contato).
         # consentimento_em guarda quando a pessoa marcou a autorização da

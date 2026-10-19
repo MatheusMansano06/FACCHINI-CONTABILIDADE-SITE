@@ -207,16 +207,17 @@
         <p>Peça o que precisar pra equipe da Facchini e acompanhe o andamento por aqui.</p>
       </div>
 
-      <!-- Busca ainda não indexa nada real — só a interface por enquanto -->
+      <!-- Busca: GET /api/busca (empresa da sessão) + resultados montados em js/portal.js -->
       <form class="portal__busca" role="search" action="#" data-busca-portal>
         <svg class="icone" aria-hidden="true"><use href="#i-busca"/></svg>
-        <input type="search" placeholder="Buscar documentos, obrigações, comunicados…" aria-label="Buscar no portal">
+        <input type="search" name="q" maxlength="80" autocomplete="off" placeholder="Buscar documentos, obrigações, comunicados…" aria-label="Buscar no portal">
       </form>
 
-      <button class="portal__sino" type="button" aria-label="Notificações (1 não lida)">
+      <!-- Sino = atalho pros Comunicados; ponto só com comunicado ainda não visto (_sino em app.py) -->
+      <a class="portal__sino" href="portal-comunicados.html" aria-label="{{ sino.rotulo }}" title="{{ sino.rotulo }}">
         <svg class="icone" aria-hidden="true"><use href="#i-sino"/></svg>
-        <span class="portal__sino-ponto" aria-hidden="true"></span>
-      </button>
+        {% if sino.nao_lidos %}<span class="portal__sino-ponto" aria-hidden="true"></span>{% endif %}
+      </a>
 
       <div class="portal__usuario-caixa">
         <button class="portal__usuario" type="button" aria-haspopup="true" aria-expanded="false" data-menu-usuario>

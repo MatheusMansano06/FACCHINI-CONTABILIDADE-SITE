@@ -157,6 +157,7 @@ body { background: var(--osso-fundo); }
 }
 
 .portal__busca {
+  position: relative;
   flex: 1;
   display: flex;
   align-items: center;
@@ -184,6 +185,68 @@ body { background: var(--osso-fundo); }
 }
 .portal__busca input:focus { outline: none; }
 .portal__busca input::placeholder { color: var(--tinta-suave); }
+
+/* Resultados da busca (montados em portal.js a partir de /api/busca). */
+.busca-resultados {
+  position: absolute;
+  top: calc(100% + var(--e-2));
+  left: 0;
+  right: 0;
+  z-index: 70;
+  /* A caixa de busca fica estreita no desktop (divide o topo com a saudação). */
+  min-width: min(26rem, calc(100vw - 2.5rem));
+  max-height: min(70vh, 30rem);
+  overflow-y: auto;
+  padding: var(--e-2);
+  background: var(--branco);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-lg);
+  color: var(--tinta);
+}
+.busca-resultados[hidden] { display: none; }
+.busca-resultados__grupo + .busca-resultados__grupo { margin-top: var(--e-2); }
+.busca-resultados__titulo {
+  padding: var(--e-1) var(--e-2);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+.busca-resultados__lista { display: grid; gap: 0.1rem; }
+.busca-resultados__item {
+  display: grid;
+  gap: 0.1rem;
+  padding: var(--e-2);
+  border-radius: var(--raio-sm);
+}
+.busca-resultados__item strong { font-size: var(--t-sm); font-weight: 600; color: var(--navy-900); }
+.busca-resultados__item small { font-size: var(--t-xs); color: var(--tinta-suave); }
+.busca-resultados__item:hover,
+.busca-resultados__item:focus-visible {
+  background: var(--osso);
+  outline: none;
+  box-shadow: inset 3px 0 0 var(--ouro);
+}
+.busca-resultados__mais {
+  display: block;
+  padding: var(--e-1) var(--e-2);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--ouro-escuro);
+}
+.busca-resultados__mais:hover,
+.busca-resultados__mais:focus-visible { text-decoration: underline; }
+.busca-resultados__vazio {
+  padding: var(--e-2);
+  font-size: var(--t-sm);
+  color: var(--tinta-suave);
+}
+
+/* Linha de tabela que a busca apontou (?destaque=… na URL). */
+.linha-destacada > td { background: rgb(217 164 65 / 0.16); }
+.linha-destacada > td:first-child { box-shadow: inset 3px 0 0 var(--ouro); }
 
 .portal__sino {
   position: relative;

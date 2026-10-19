@@ -600,6 +600,8 @@ def _cabecalho(request: Request, empresa_dados: dict | None, identificador: str 
         "deve_trocar_senha": bool(request.session.get("deve_trocar_senha")),
         # Só mostra "Trocar empresa" no menu do usuário quando faz sentido.
         "multiplas_empresas": len(request.session.get("empresas", [])) > 1,
+        # Sino do topo — ponto e aria-label (ver _comunicados_nao_lidos).
+        "sino": _sino(request),
     }
 
 
@@ -1098,6 +1100,53 @@ def _comunicados_recentes_template(request: Request, limite: int = 3) -> list[di
 templates.env.globals["comunicados_recentes"] = _comunicados_recentes_template
 
 
+def _comunicados_nao_lidos(request: Request) -> int:
+    """Comunicados visíveis pro cliente (mesmo filtro de
+    _comunicados_do_cliente) publicados depois do último que ele viu —
+    marca em comunicados_vistos, avançada ao abrir portal-comunicados.html."""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return 0
+    digitos = _somente_digitos(_identificador_ativo(request))
+    with obter_conexao() as conexao:
+        linha = conexao.execute(
+            """SELECT COUNT(*) FROM comunicados
+               WHERE removido_em IS NULL
+                 AND (empresa_digitos IS NULL OR (? != '' AND empresa_digitos = ?))
+                 AND id > COALESCE((SELECT visto_ate_id FROM comunicados_vistos WHERE usuario_id = ?), 0)""",
+            (digitos, digitos, usuario_id),
+        ).fetchone()
+    return linha[0]
+
+
+def _sino(request: Request) -> dict:
+    nao_lidos = _comunicados_nao_lidos(request)
+    if not nao_lidos:
+        rotulo = "Comunicados: nenhum não lido"
+    elif nao_lidos == 1:
+        rotulo = "Comunicados: 1 não lido"
+    else:
+        rotulo = f"Comunicados: {nao_lidos} não lidos"
+    return {"nao_lidos": nao_lidos, "rotulo": rotulo}
+
+
+def _marcar_comunicados_vistos(usuario_id: int, ate_id: int) -> int:
+    """Avança a marca de "visto até" (nunca volta) e devolve a anterior —
+    usada pra destacar o que é novo nesta visita."""
+    with obter_conexao() as conexao:
+        anterior = conexao.execute(
+            "SELECT visto_ate_id FROM comunicados_vistos WHERE usuario_id = ?", (usuario_id,)
+        ).fetchone()
+        conexao.execute(
+            """INSERT INTO comunicados_vistos (usuario_id, visto_ate_id) VALUES (?, ?)
+               ON CONFLICT (usuario_id) DO UPDATE SET
+                 visto_ate_id = MAX(visto_ate_id, excluded.visto_ate_id),
+                 atualizado_em = datetime('now')""",
+            (usuario_id, ate_id),
+        )
+    return anterior["visto_ate_id"] if anterior else 0
+
+
 @app.get("/pages/portal-comunicados.html")
 async def pagina_portal_comunicados(request: Request):
     guarda = _guarda_portal(request)
@@ -1107,9 +1156,137 @@ async def pagina_portal_comunicados(request: Request):
     # Única chamada à Acessórias aqui (cabeçalho), já cacheada por _get;
     # os comunicados em si são locais.
     empresa_dados = await acessorias.buscar_empresa(identificador) if identificador else None
+    comunicados = _comunicados_do_cliente(request)
+    # Marca antes de montar o cabeçalho, pra o sino já sair apagado aqui.
+    visto_antes = _marcar_comunicados_vistos(
+        request.session["usuario_id"], max((c["id"] for c in comunicados), default=0)
+    )
+    for comunicado in comunicados:
+        comunicado["novo"] = comunicado["id"] > visto_antes
     contexto = _cabecalho(request, empresa_dados, identificador)
-    contexto["comunicados"] = _comunicados_do_cliente(request)
+    contexto["comunicados"] = comunicados
     return templates.TemplateResponse(request, "portal-comunicados.html", contexto)
+
+
+# --- Busca do topo do portal ----------------------------------------------
+# Procura no que o cliente já vê nas páginas — documentos, obrigações,
+# boletos (Acessórias) e comunicados (local) — sempre da empresa_ativa da
+# sessão, nunca de um identificador vindo da requisição. Usa exatamente os
+# mesmos parâmetros das páginas (Documentos: 365 dias; Obrigações e
+# Financeiro: padrão), então quase sempre sai do cache de _get, sem rede.
+# Cada resultado aponta pra página certa com ?destaque=… (portal.js realça
+# a linha da tabela) ou, no caso de comunicado, pra âncora #comunicado-N.
+import unicodedata  # noqa: E402
+from urllib.parse import urlencode  # noqa: E402
+
+BUSCA_TERMO_MAX = 80
+BUSCA_ITENS_POR_GRUPO = 5
+# Atalhos pras próprias telas — "senha", "boleto", "ajuda" levam a algum
+# lugar mesmo quando nenhum dado bate. Palavras já sem acento.
+PAGINAS_BUSCA = [
+    ("Início", "portal-inicio.html", "inicio painel resumo novidades vencimentos"),
+    ("Documentos", "portal-documentos.html", "documentos arquivos guias balancete folha baixar download"),
+    ("Obrigações", "portal-obrigacoes.html", "obrigacoes impostos guias prazos das gps dctfweb fgts"),
+    ("Calendário", "portal-calendario.html", "calendario agenda mes prazos vencimentos"),
+    ("Solicitações", "portal-solicitacoes.html", "solicitacoes pedidos tickets atendimento chamados"),
+    ("Abrir uma solicitação", "portal-solicitacoes.html#nova-solicitacao", "nova solicitacao abrir pedido ajuda duvida anexo enviar"),
+    ("Financeiro", "portal-financeiro.html", "financeiro boletos honorarios pagamentos nota fiscal pago"),
+    ("Comunicados", "portal-comunicados.html", "comunicados avisos novidades noticias informativos"),
+    ("Perfil da empresa", "portal-perfil.html", "perfil empresa cnpj dados cadastro contatos acessos"),
+]
+
+
+def _normalizar_busca(texto: str) -> str:
+    sem_acento = "".join(
+        c for c in unicodedata.normalize("NFD", texto or "") if not unicodedata.combining(c)
+    )
+    return " ".join(sem_acento.casefold().split())
+
+
+def _bate(palavras: list[str], *campos: str) -> bool:
+    texto = _normalizar_busca(" ".join(c for c in campos if c))
+    return all(p in texto for p in palavras)
+
+
+def _url_destaque(pagina: str, *termos: str) -> str:
+    termos_validos = [("destaque", t) for t in termos if t]
+    return f"{pagina}?{urlencode(termos_validos)}" if termos_validos else pagina
+
+
+def _grupo_busca(titulo: str, url: str, itens: list[dict]) -> dict:
+    return {"titulo": titulo, "url": url, "total": len(itens), "itens": itens[:BUSCA_ITENS_POR_GRUPO]}
+
+
+@app.get("/api/busca")
+async def api_busca(request: Request):
+    if not _tem_sessao(request):
+        return JSONResponse({"erro": "Sessão expirada. Faça login de novo."}, status_code=401)
+
+    termo = (request.query_params.get("q") or "").strip()[:BUSCA_TERMO_MAX]
+    palavras = _normalizar_busca(termo).split()
+    if len("".join(palavras)) < 2:
+        return {"termo": termo, "grupos": []}
+
+    identificador = _identificador_ativo(request)
+    if identificador:
+        documentos_brutos, obrigacoes_brutas, boletos_brutos = await asyncio.gather(
+            acessorias.listar_documentos_entregues(identificador, dias_atras=365),
+            acessorias.listar_obrigacoes(identificador),
+            acessorias.listar_boletos(identificador),
+        )
+    else:
+        documentos_brutos, obrigacoes_brutas, boletos_brutos = [], [], []
+
+    documentos = [
+        {
+            "titulo": d["nome"],
+            "detalhe": " · ".join(filter(None, [d["tipo"], f"ref. {d['referencia']}", d["data_envio"] and f"enviado em {d['data_envio']}"])),
+            "url": _url_destaque("portal-documentos.html", d["nome"], d["referencia"], d["data_envio"]),
+        }
+        for d in _formatar_documentos(documentos_brutos)
+        if _bate(palavras, d["nome"], d["tipo"], d["referencia"], d["data_envio"])
+    ]
+    obrigacoes = [
+        {
+            "titulo": o["nome"],
+            "detalhe": " · ".join(filter(None, [o["competencia"] and f"competência {o['competencia']}", o["prazo"] and f"prazo {o['prazo']}", o["status"]])),
+            "url": _url_destaque("portal-obrigacoes.html", o["nome"], o["competencia"], o["prazo"]),
+        }
+        for o in _formatar_obrigacoes(obrigacoes_brutas)
+        if _bate(palavras, o["nome"], o["tipo"], o["competencia"], o["prazo"], o["status"])
+    ]
+    boletos = [
+        {
+            "titulo": f"Boleto {b['competencia']}".strip(),
+            "detalhe": " · ".join(filter(None, [b["vencimento"] and f"vence {b['vencimento']}", b["valor"] and f"R$ {b['valor']}", b["status"]])),
+            "url": _url_destaque("portal-financeiro.html", b["competencia"], b["vencimento"], b["valor"]),
+        }
+        for b in _formatar_boletos(boletos_brutos)
+        if _bate(palavras, "boleto honorarios", b["competencia"], b["vencimento"], b["valor"], b["status"])
+    ]
+    comunicados = [
+        {
+            "titulo": c["titulo"],
+            "detalhe": " · ".join(filter(None, [c["categoria_nome"], c["data"]])),
+            "url": f"portal-comunicados.html#comunicado-{c['id']}",
+        }
+        for c in _comunicados_do_cliente(request)
+        if _bate(palavras, c["titulo"], c["texto"], c["categoria_nome"])
+    ]
+    paginas = [
+        {"titulo": titulo, "detalhe": "Ir para a página", "url": url}
+        for titulo, url, chaves in PAGINAS_BUSCA
+        if _bate(palavras, titulo, chaves)
+    ]
+
+    grupos = [
+        _grupo_busca("Documentos", "portal-documentos.html", documentos),
+        _grupo_busca("Obrigações", "portal-obrigacoes.html", obrigacoes),
+        _grupo_busca("Boletos", "portal-financeiro.html", boletos),
+        _grupo_busca("Comunicados", "portal-comunicados.html", comunicados),
+        _grupo_busca("Páginas do portal", "", paginas),
+    ]
+    return {"termo": termo, "grupos": [g for g in grupos if g["total"]]}
 
 
 @app.get("/pages/equipe-comunicados.html")
@@ -1892,27 +2069,27 @@ def _no_portal(request: Request) -> bool:
     return (request.url.hostname or "").startswith("portal.")
 
 
-@app.get("/")
-@app.get("/index.html")
+@app.api_route("/", methods=["GET", "HEAD"])
+@app.api_route("/index.html", methods=["GET", "HEAD"])
 async def raiz(request: Request):
     if _no_portal(request):
         return RedirectResponse("/pages/login.html", status_code=303)
     return FileResponse(RAIZ / "index.html")
 
 
-@app.get("/robots.txt")
+@app.api_route("/robots.txt", methods=["GET", "HEAD"])
 async def robots(request: Request):
     if _no_portal(request):
         return PlainTextResponse("User-agent: *\nDisallow: /\n")
     return FileResponse(RAIZ / "robots.txt")
 
 
-@app.get("/sitemap.xml")
+@app.api_route("/sitemap.xml", methods=["GET", "HEAD"])
 async def sitemap():
     return FileResponse(RAIZ / "sitemap.xml")
 
 
-@app.get("/site.webmanifest")
+@app.api_route("/site.webmanifest", methods=["GET", "HEAD"])
 async def manifesto():
     return FileResponse(RAIZ / "site.webmanifest", media_type="application/manifest+json")
 

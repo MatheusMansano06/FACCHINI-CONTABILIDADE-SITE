@@ -23,6 +23,8 @@ window.TOUR_ROTEIROS = {
         'Vou te mostrar cada parte desta tela em menos de um minuto.',
     },
     { alvo: MENU_PORTAL, titulo: 'O menu do portal', texto: 'Por aqui você navega entre as áreas: Documentos, Obrigações, Calendário, Solicitações, Financeiro, Comunicados e o Perfil da empresa. Na primeira vez que abrir cada uma, eu apareço pra explicar.' },
+    { alvo: '.portal__busca', titulo: 'Busca', texto: 'Procurando uma guia, um boleto ou um aviso? Digite aqui — o nome (ex.: DAS) ou o mês (ex.: 03/2026) — e escolha o resultado: eu te levo direto pro lugar certo.' },
+    { alvo: '.portal__sino', titulo: 'Avisos novos', texto: 'Quando o escritório publica um comunicado que você ainda não leu, aparece uma bolinha no sino. Clique nele pra ler.' },
     { alvo: secao('titulo-acesso-rapido'), titulo: 'Acesso rápido', texto: 'Os atalhos do dia a dia: mandar documentos pra gente, ver obrigações, abrir uma solicitação, conferir boletos, ler comunicados ou falar com a equipe no WhatsApp.' },
     { alvo: secao('titulo-novidades'), titulo: 'Novidades da contabilidade', texto: 'Os avisos mais recentes do escritório — mudanças de prazo, lembretes, informações importantes pra sua empresa. “Ver todas” abre a lista completa.' },
     { alvo: secao('titulo-documentos'), titulo: 'Documentos disponíveis', texto: 'O que entregamos pra você nos últimos 30 dias: guias, balancetes, folhas de pagamento. É só clicar pra baixar, sem esperar e-mail.' },

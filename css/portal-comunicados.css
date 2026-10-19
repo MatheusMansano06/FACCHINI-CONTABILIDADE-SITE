@@ -31,7 +31,8 @@
 }
 
 .comunicado__categoria,
-.comunicado__exclusivo {
+.comunicado__exclusivo,
+.comunicado__novo {
   padding: 0.15rem 0.55rem;
   font-size: 0.68rem;
   font-weight: 700;
@@ -44,6 +45,8 @@
 .comunicado__categoria--informativo { background: rgb(29 111 165 / 0.14); color: #1D6FA5; }
 .comunicado__categoria--institucional { background: var(--osso-fundo); }
 .comunicado__exclusivo { background: rgb(43 138 88 / 0.12); color: #1E8449; }
+/* Publicado depois da última visita a esta página (sino do topo). */
+.comunicado__novo { background: var(--navy-900); color: var(--branco); }
 
 .comunicado__titulo {
   margin-top: var(--e-2);
