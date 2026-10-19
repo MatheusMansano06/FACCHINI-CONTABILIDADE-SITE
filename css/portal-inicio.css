@@ -117,7 +117,11 @@
 /* ================================ NOVIDADES ================================ */
 .novidades {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  /* No máximo 3 colunas, mínimo 15rem cada: com 1 ou 2 comunicados
+     publicados os cartões mantêm o tamanho de 1/3 em vez de esticar e
+     empurrar o resto do Início pra baixo (auto-fill guarda as trilhas
+     vazias; o max() impede passar de 3 por linha). */
+  grid-template-columns: repeat(auto-fill, minmax(max(15rem, calc((100% - 1.3rem) / 3)), 1fr));
   gap: 0.65rem;
 }
 
@@ -152,6 +156,11 @@
 .etiqueta--informativo { background: rgb(255 255 255 / 0.92); }
 .etiqueta--institucional { background: rgb(255 255 255 / 0.92); }
 
+/* Cada novidade é um link pro comunicado completo (portal-comunicados.html). */
+.novidade__link { display: block; color: inherit; border-radius: var(--raio-sm); }
+.novidade__link:hover h3 { color: var(--ouro-escuro); }
+.novidade__link:focus-visible { outline: 2px solid var(--ouro); outline-offset: 3px; }
+
 .novidade h3 {
   margin-top: 0.4rem;
   font-size: var(--t-xs);
@@ -164,7 +173,8 @@
    (leitor de tela, impressão, indexação). */
 .novidade p { display: none; }
 
-.novidade time {
+.novidade time,
+.novidade__nota {
   display: block;
   margin-top: 0.15rem;
   font-size: 0.68rem;

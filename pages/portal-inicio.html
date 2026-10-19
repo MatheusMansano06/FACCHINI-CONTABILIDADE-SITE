@@ -182,9 +182,10 @@
   {% endif %}
 
   <!-- ============================ SIDEBAR ============================ -->
-  <!-- Reaparece igual em toda página do portal. Documentos já tem página
-       própria; os demais itens (Obrigações, Comunicados...) ainda não —
-       TODO: trocar href="#" conforme cada um for construído. -->
+  <!-- Reaparece igual em toda página do portal — todo item já tem página
+       própria. Não existe item "Atendimentos" separado: na Acessórias um
+       atendimento É uma solicitação (/requests), então ficaria duplicado
+       com Solicitações. -->
   <aside class="portal__sidebar" id="sidebar" data-sidebar>
     <div class="portal__marca-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 
@@ -205,7 +206,7 @@
       <a class="portal__nav-item" href="portal-obrigacoes.html">
         <svg class="icone" aria-hidden="true"><use href="#i-obrigacoes"/></svg> Obrigações
       </a>
-      <a class="portal__nav-item" href="#">
+      <a class="portal__nav-item" href="portal-comunicados.html">
         <svg class="icone" aria-hidden="true"><use href="#i-comunicados"/></svg> Comunicados
       </a>
       <a class="portal__nav-item" href="portal-solicitacoes.html">
@@ -213,9 +214,6 @@
       </a>
       <a class="portal__nav-item" href="portal-financeiro.html">
         <svg class="icone" aria-hidden="true"><use href="#i-financeiro"/></svg> Financeiro
-      </a>
-      <a class="portal__nav-item" href="#">
-        <svg class="icone" aria-hidden="true"><use href="#i-atendimentos"/></svg> Atendimentos
       </a>
       <a class="portal__nav-item" href="portal-perfil.html">
         <svg class="icone" aria-hidden="true"><use href="#i-perfil"/></svg> Perfil
@@ -318,15 +316,19 @@
             </h2>
             <p class="cartao__subtitulo">Suas principais funções, a um clique.</p>
           </div>
-          <a class="cartao__ver-todas" href="#">Ver todas <svg class="icone" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a>
+          <!-- Sem "Ver todas" aqui: não existe uma página de "todas as
+               funções" — o menu lateral já é essa lista completa. -->
         </div>
 
         <ul class="acesso-rapido">
-          <li><a href="#"><svg class="icone" aria-hidden="true"><use href="#i-enviar"/></svg> Enviar documentos <svg class="icone acesso-rapido__seta" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a></li>
+          <!-- Enviar documentos = abrir solicitação com anexo; o ?assunto=
+               só pré-preenche o assunto (js/portal-solicitacoes.js). -->
+          <li><a href="portal-solicitacoes.html?assunto=documentos#nova-solicitacao"><svg class="icone" aria-hidden="true"><use href="#i-enviar"/></svg> Enviar documentos <svg class="icone acesso-rapido__seta" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a></li>
           <li><a href="portal-obrigacoes.html"><svg class="icone" aria-hidden="true"><use href="#i-obrigacoes-check"/></svg> Consultar obrigações <svg class="icone acesso-rapido__seta" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a></li>
           <li><a href="portal-solicitacoes.html"><svg class="icone" aria-hidden="true"><use href="#i-solicitacoes-mais"/></svg> Abrir solicitação <svg class="icone acesso-rapido__seta" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a></li>
           <li><a href="portal-financeiro.html"><svg class="icone" aria-hidden="true"><use href="#i-financeiro"/></svg> Área financeira <svg class="icone acesso-rapido__seta" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a></li>
-          <li><a href="#"><svg class="icone" aria-hidden="true"><use href="#i-atendimentos"/></svg> Falar com a equipe <svg class="icone acesso-rapido__seta" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a></li>
+          <li><a href="portal-comunicados.html"><svg class="icone" aria-hidden="true"><use href="#i-comunicados"/></svg> Ver comunicados <svg class="icone acesso-rapido__seta" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a></li>
+          <li><a href="https://wa.me/551933811008" target="_blank" rel="noopener noreferrer" aria-label="Falar com a equipe pelo WhatsApp (abre em nova aba)"><svg class="icone" aria-hidden="true"><use href="#i-atendimentos"/></svg> Falar com a equipe <svg class="icone acesso-rapido__seta" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a></li>
         </ul>
       </section>
 
@@ -340,36 +342,35 @@
             </h2>
             <p class="cartao__subtitulo">Fique por dentro das principais informações, comunicados e atualizações da nossa equipe.</p>
           </div>
-          <a class="cartao__ver-todas" href="#">Ver todas <svg class="icone" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a>
+          <a class="cartao__ver-todas" href="portal-comunicados.html">Ver todas <svg class="icone" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a>
         </div>
 
+        <!-- Os 3 comunicados mais recentes publicados pela equipe
+             (pages/equipe-comunicados.html). comunicados_recentes é um
+             global do Jinja definido em backend/app.py — lê do SQLite local
+             só os gerais + os da empresa ativa da sessão. A foto sai da
+             categoria (valores fixos, nunca texto digitado). Sem nenhum
+             comunicado ainda, cai no cartão institucional fixo pra o card
+             não ficar vazio. -->
+        {% set fotos_categoria = {"comunicado": "portal-novidade-defis", "informativo": "portal-novidade-planejamento", "institucional": "portal-novidade-compromisso"} %}
         <ul class="novidades">
+          {% for c in comunicados_recentes(request, 3) %}
+          {% set foto = fotos_categoria.get(c.categoria, "portal-novidade-defis") %}
           <li class="novidade">
-            <div class="novidade__midia">
-              <img src="../assets/images/portal-novidade-defis.webp"
-                   srcset="../assets/images/portal-novidade-defis-380.webp 380w, ../assets/images/portal-novidade-defis.webp 600w"
-                   sizes="(max-width: 900px) 90vw, 22vw"
-                   width="1448" height="1086" loading="lazy" decoding="async" alt="">
-              <span class="etiqueta etiqueta--comunicado">Comunicado</span>
-            </div>
-            <h3>Prazo da DEFIS 2024</h3>
-            <p>Atenção ao prazo de entrega da DEFIS para empresas do Simples Nacional.</p>
-            <time datetime="2026-11-12">12 de novembro de 2026</time>
+            <a class="novidade__link" href="portal-comunicados.html#comunicado-{{ c.id }}">
+              <div class="novidade__midia">
+                <img src="../assets/images/{{ foto }}.webp"
+                     srcset="../assets/images/{{ foto }}-380.webp 380w, ../assets/images/{{ foto }}.webp 600w"
+                     sizes="(max-width: 900px) 90vw, 22vw"
+                     width="1448" height="1086" loading="lazy" decoding="async" alt="">
+                <span class="etiqueta etiqueta--{{ c.categoria }}">{{ c.categoria_nome }}</span>
+              </div>
+              <h3>{{ c.titulo }}</h3>
+              <p>{{ c.texto|truncate(140) }}</p>
+              <time datetime="{{ c.data_iso }}">{{ c.data }}</time>
+            </a>
           </li>
-
-          <li class="novidade">
-            <div class="novidade__midia">
-              <img src="../assets/images/portal-novidade-planejamento.webp"
-                   srcset="../assets/images/portal-novidade-planejamento-380.webp 380w, ../assets/images/portal-novidade-planejamento.webp 600w"
-                   sizes="(max-width: 900px) 90vw, 22vw"
-                   width="1448" height="1086" loading="lazy" decoding="async" alt="">
-              <span class="etiqueta etiqueta--informativo">Informativo</span>
-            </div>
-            <h3>Planejamento Tributário para 2027</h3>
-            <p>Já estamos iniciando o planejamento para o próximo ano. Fale com nossa equipe!</p>
-            <time datetime="2026-11-08">08 de novembro de 2026</time>
-          </li>
-
+          {% else %}
           <li class="novidade">
             <div class="novidade__midia">
               <img src="../assets/images/portal-novidade-compromisso.webp"
@@ -380,8 +381,9 @@
             </div>
             <h3>Nosso compromisso com você</h3>
             <p>Mais que números, construímos relações de confiança.</p>
-            <time datetime="2026-11-01">01 de novembro de 2026</time>
+            <span class="novidade__nota">Nenhum comunicado novo por enquanto</span>
           </li>
+          {% endfor %}
         </ul>
       </section>
 
@@ -465,7 +467,7 @@
             <div class="cartao__cabecalho cartao__cabecalho--compacto">
               <h2 class="cartao__titulo" id="titulo-atendimentos">
                 <svg class="icone" aria-hidden="true"><use href="#i-atendimentos"/></svg>
-                Últimos atendimentos
+                Últimas solicitações
               </h2>
               <a class="cartao__ver-todas" href="portal-solicitacoes.html">Ver todos <svg class="icone" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a>
             </div>
@@ -477,7 +479,7 @@
                 <span class="etiqueta-status etiqueta-status--{{ a.classe_status }}">{{ a.status }}</span>
               </li>
               {% else %}
-              <li>Nenhum atendimento recente.</li>
+              <li>Nenhuma solicitação recente.</li>
               {% endfor %}
             </ul>
           </section>
@@ -488,7 +490,7 @@
               <h2>Precisa de ajuda?</h2>
               <p>Nossa equipe está pronta para atender você.</p>
             </div>
-            <a class="botao botao--ouro" href="#">
+            <a class="botao botao--ouro" href="https://wa.me/551933811008" target="_blank" rel="noopener noreferrer" aria-label="Entrar em contato pelo WhatsApp (abre em nova aba)">
               Entrar em contato
               <svg class="icone" aria-hidden="true"><use href="#i-seta"/></svg>
             </a>

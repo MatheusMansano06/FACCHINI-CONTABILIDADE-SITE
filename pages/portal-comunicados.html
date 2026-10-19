@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               img-src 'self' data:;
+               font-src 'self';
+               style-src 'self';
+               script-src 'self';
+               connect-src 'self';
+               form-action 'self';
+               base-uri 'self';
+               object-src 'none';
+               frame-src 'none';
+               upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+<title>Comunicados | Portal do Cliente Facchini</title>
+<meta name="theme-color" content="#0B1E33">
+
+<link rel="icon" href="../assets/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+
+<link rel="preload" href="../assets/fonts/archivo-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/base.css">
+
+<!-- Casca do portal (compartilhada) + a lista de comunicados, que é
+     exclusiva desta página (e do painel da equipe que publica). -->
+<link rel="stylesheet" href="../css/portal-shell.css">
+<link rel="stylesheet" href="../css/portal-comunicados.css">
+</head>
+
+<body>
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-inicio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/>
+  </symbol>
+  <symbol id="i-documentos" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 17h6"/>
+  </symbol>
+  <symbol id="i-obrigacoes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M8 3v4M16 3v4"/>
+  </symbol>
+  <symbol id="i-calendario" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M8 3v4M16 3v4"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/>
+  </symbol>
+  <symbol id="i-seta-esquerda" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 12H5m5.5-5.5L5 12l5.5 5.5"/>
+  </symbol>
+  <symbol id="i-seta-direita" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 12h15m-5.5-5.5L19 12l-5.5 5.5"/>
+  </symbol>
+  <symbol id="i-comunicados" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10v4h3l6 4V6L6 10H3Z"/><path d="M17 9a4 4 0 0 1 0 6"/>
+  </symbol>
+  <symbol id="i-solicitacoes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/>
+  </symbol>
+  <symbol id="i-solicitacoes-mais" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M12 8.2v5.1M9.4 10.75h5.2"/>
+  </symbol>
+  <symbol id="i-financeiro" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 20V10M9.3 20V5M14.7 20v-8M20 20V8"/>
+  </symbol>
+  <symbol id="i-atendimentos" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 13v-1a8 8 0 0 1 16 0v1"/><rect x="3" y="13" width="4.2" height="6" rx="1.4"/><rect x="16.8" y="13" width="4.2" height="6" rx="1.4"/><path d="M19 19v.5a3 3 0 0 1-3 3h-1.8"/>
+  </symbol>
+  <symbol id="i-perfil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/>
+  </symbol>
+  <symbol id="i-busca" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
+  </symbol>
+  <symbol id="i-sino" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.2 9a5.8 5.8 0 0 1 11.6 0c0 3.8 1.4 5.2 1.4 5.2H4.8S6.2 12.8 6.2 9Z"/><path d="M10.2 17.8a1.8 1.8 0 0 0 3.6 0"/>
+  </symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m7 10 5 5 5-5"/>
+  </symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <path d="M4 7h16M4 12h16M4 17h16"/>
+  </symbol>
+  <symbol id="i-fechar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <path d="M6 6l12 12M18 6 6 18"/>
+  </symbol>
+  <symbol id="i-cadeado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="15.3" r="1.3"/>
+  </symbol>
+  <symbol id="i-olho" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+  </symbol>
+  <symbol id="i-olho-fechado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 3l18 18"/>
+    <path d="M10.6 5.2A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a18 18 0 0 1-3.2 4.2M6.5 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7c1.4 0 2.7-.3 3.9-.7"/>
+    <path d="M9.5 10a3 3 0 0 0 4.2 4.2"/>
+  </symbol>
+  <symbol id="i-trocar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 7h13l-3-3M4 7l3 3"/><path d="M20 17H7l3 3M20 17l-3-3"/>
+  </symbol>
+</svg>
+
+<div class="portal">
+
+  <!-- ==================== AVISO FLUTUANTE: TROCAR SENHA ==================== -->
+  <!-- Mesmo bloco de portal-inicio.html — ver comentário lá. -->
+  {% if deve_trocar_senha %}
+  <div class="aviso-senha" role="region" aria-label="Troca de senha recomendada" data-aviso-senha>
+    <div class="aviso-senha__caixa">
+      <button class="aviso-senha__fechar" type="button" aria-label="Fechar aviso" data-fechar-aviso-senha>
+        <svg class="icone" aria-hidden="true"><use href="#i-fechar"/></svg>
+      </button>
+
+      <p class="aviso-senha__titulo">Troque sua senha</p>
+      <p class="aviso-senha__texto">Você ainda está com a senha provisória do escritório. Recomendamos trocar por uma só sua.</p>
+
+      <form class="aviso-senha__formulario" method="post" action="#" novalidate data-formulario-troca-senha>
+        <div class="campo">
+          <label for="aviso-nova-senha">Nova senha</label>
+          <div class="campo__caixa">
+            <svg class="icone campo__icone" aria-hidden="true"><use href="#i-cadeado"/></svg>
+            <input type="password" id="aviso-nova-senha" name="novaSenha" autocomplete="new-password"
+                   placeholder="Pelo menos 8 caracteres" required data-campo-senha>
+            <button class="campo__alternar" type="button" aria-label="Mostrar senha" aria-pressed="false" data-alternar-senha>
+              <svg class="icone" aria-hidden="true"><use href="#i-olho-fechado"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="campo">
+          <label for="aviso-confirmacao">Confirme a nova senha</label>
+          <div class="campo__caixa">
+            <svg class="icone campo__icone" aria-hidden="true"><use href="#i-cadeado"/></svg>
+            <input type="password" id="aviso-confirmacao" name="confirmacao" autocomplete="new-password"
+                   placeholder="Digite de novo" required>
+          </div>
+        </div>
+
+        <button class="botao botao--ouro botao--cheio" type="submit">Salvar nova senha</button>
+        <p class="aviso-senha__retorno" role="status" aria-live="polite" data-retorno-troca-senha></p>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ============================ SIDEBAR ============================ -->
+  <aside class="portal__sidebar" id="sidebar" data-sidebar>
+    <div class="portal__marca-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+    <a class="portal__logo" href="https://www.facchiniassessoria.com.br/" aria-label="Facchini Assessoria Contábil — ir para o site">
+      <img src="../assets/logo/facchini-logo-branco.webp" width="640" height="133" alt="Facchini Assessoria Contábil">
+    </a>
+
+    <nav class="portal__nav" aria-label="Navegação do portal">
+      <a class="portal__nav-item" href="portal-inicio.html">
+        <svg class="icone" aria-hidden="true"><use href="#i-inicio"/></svg> Início
+      </a>
+      <a class="portal__nav-item" href="portal-calendario.html">
+        <svg class="icone" aria-hidden="true"><use href="#i-calendario"/></svg> Calendário
+      </a>
+      <a class="portal__nav-item" href="portal-documentos.html">
+        <svg class="icone" aria-hidden="true"><use href="#i-documentos"/></svg> Documentos
+      </a>
+      <a class="portal__nav-item" href="portal-obrigacoes.html">
+        <svg class="icone" aria-hidden="true"><use href="#i-obrigacoes"/></svg> Obrigações
+      </a>
+      <a class="portal__nav-item esta-ativo" href="portal-comunicados.html" aria-current="page">
+        <svg class="icone" aria-hidden="true"><use href="#i-comunicados"/></svg> Comunicados
+      </a>
+      <a class="portal__nav-item" href="portal-solicitacoes.html">
+        <svg class="icone" aria-hidden="true"><use href="#i-solicitacoes"/></svg> Solicitações
+      </a>
+      <a class="portal__nav-item" href="portal-financeiro.html">
+        <svg class="icone" aria-hidden="true"><use href="#i-financeiro"/></svg> Financeiro
+      </a>
+      <a class="portal__nav-item" href="portal-perfil.html">
+        <svg class="icone" aria-hidden="true"><use href="#i-perfil"/></svg> Perfil
+      </a>
+    </nav>
+
+    <div class="portal__sidebar-rodape">
+      <span class="portal__linha-ouro" aria-hidden="true"></span>
+      <p>Contabilidade<br>que impulsiona o seu amanhã</p>
+    </div>
+  </aside>
+
+  <div class="portal__fundo-sidebar" hidden data-fundo-sidebar></div>
+
+  <!-- ============================= ÁREA PRINCIPAL ============================= -->
+  <div class="portal__area">
+
+    <header class="portal__topo">
+      <button class="portal__abrir-menu" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar" data-abrir-sidebar>
+        <svg class="icone" aria-hidden="true"><use href="#i-menu"/></svg>
+      </button>
+
+      <div class="portal__saudacao">
+        <h1>Comunicados</h1>
+        <p>Avisos, prazos e novidades que a equipe da Facchini publica pra você.</p>
+      </div>
+
+      <!-- Busca ainda não indexa nada real — só a interface por enquanto -->
+      <form class="portal__busca" role="search" action="#" data-busca-portal>
+        <svg class="icone" aria-hidden="true"><use href="#i-busca"/></svg>
+        <input type="search" placeholder="Buscar documentos, obrigações, comunicados…" aria-label="Buscar no portal">
+      </form>
+
+      <button class="portal__sino" type="button" aria-label="Notificações (1 não lida)">
+        <svg class="icone" aria-hidden="true"><use href="#i-sino"/></svg>
+        <span class="portal__sino-ponto" aria-hidden="true"></span>
+      </button>
+
+      <div class="portal__usuario-caixa">
+        <button class="portal__usuario" type="button" aria-haspopup="true" aria-expanded="false" data-menu-usuario>
+          <span class="portal__avatar" aria-hidden="true">{{ empresa.inicial }}</span>
+          <span class="portal__usuario-texto">
+            <strong>{{ empresa.fantasia }}</strong>
+            <small>CNPJ {{ empresa.cnpj }}</small>
+          </span>
+          <svg class="icone" aria-hidden="true"><use href="#i-chevron"/></svg>
+        </button>
+
+        <div class="portal__dropdown" role="menu" hidden data-dropdown-usuario>
+          <a role="menuitem" href="portal-perfil.html">
+            <svg class="icone" aria-hidden="true"><use href="#i-perfil"/></svg> Meu perfil
+          </a>
+          {% if multiplas_empresas %}
+          <a role="menuitem" href="selecionar-empresa.html">
+            <svg class="icone" aria-hidden="true"><use href="#i-trocar"/></svg> Trocar empresa
+          </a>
+          {% endif %}
+          <a role="menuitem" href="/logout">
+            <svg class="icone" aria-hidden="true"><use href="#i-fechar"/></svg> Sair
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="portal__conteudo" id="conteudo">
+
+      <section class="cartao" aria-labelledby="titulo-comunicados">
+        <div class="cartao__cabecalho">
+          <div>
+            <h2 class="cartao__titulo" id="titulo-comunicados">
+              <svg class="icone" aria-hidden="true"><use href="#i-comunicados"/></svg>
+              Comunicados da Facchini
+            </h2>
+            <p class="cartao__subtitulo">Mais recentes primeiro. Os marcados como “Só para sua empresa” foram enviados apenas para {{ empresa.fantasia }}.</p>
+          </div>
+        </div>
+
+        <!-- Texto vem do SQLite local (tabela comunicados), digitado pela
+             equipe: sai sempre escapado pelo autoescape do Jinja — nunca
+             |safe aqui. Quebras de linha viram linhas pelo CSS
+             (white-space: pre-line), não por HTML montado no servidor. -->
+        {% if comunicados %}
+        <ol class="lista-comunicados">
+          {% for c in comunicados %}
+          <li class="comunicado" id="comunicado-{{ c.id }}">
+            <article aria-labelledby="comunicado-titulo-{{ c.id }}">
+              <div class="comunicado__meta">
+                <span class="comunicado__categoria comunicado__categoria--{{ c.categoria }}">{{ c.categoria_nome }}</span>
+                {% if c.exclusivo %}<span class="comunicado__exclusivo">Só para sua empresa</span>{% endif %}
+                <time datetime="{{ c.data_iso }}">{{ c.data }}</time>
+              </div>
+              <h3 class="comunicado__titulo" id="comunicado-titulo-{{ c.id }}">{{ c.titulo }}</h3>
+              <p class="comunicado__texto">{{ c.texto }}</p>
+              <p class="comunicado__autor">Publicado por {{ c.autor_nome }} · Equipe Facchini</p>
+            </article>
+          </li>
+          {% endfor %}
+        </ol>
+        {% else %}
+        <p class="tabela-documentos__vazio">Nenhum comunicado publicado por enquanto. Quando a equipe enviar um aviso, ele aparece aqui e no Início.</p>
+        {% endif %}
+      </section>
+
+      <section class="ajuda-comunicados" aria-labelledby="titulo-duvida-comunicado">
+        <h2 id="titulo-duvida-comunicado">Ficou com alguma dúvida sobre um comunicado?</h2>
+        <p>Abra uma solicitação pra o setor responsável, ou fale direto com a equipe pelo WhatsApp.</p>
+        <div class="ajuda-comunicados__acoes">
+          <a class="botao botao--ouro" href="portal-solicitacoes.html#nova-solicitacao">Abrir solicitação</a>
+          <a class="botao botao--contorno" href="https://wa.me/551933811008" target="_blank" rel="noopener noreferrer" aria-label="Falar pelo WhatsApp (abre em nova aba)">Falar pelo WhatsApp</a>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Só a casca do portal — esta página não tem comportamento próprio. -->
+<script src="../js/portal.js" defer></script>
+</body>
+</html>

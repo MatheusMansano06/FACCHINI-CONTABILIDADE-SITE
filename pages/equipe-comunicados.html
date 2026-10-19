@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               img-src 'self' data:;
+               font-src 'self';
+               style-src 'self';
+               script-src 'self';
+               connect-src 'self';
+               form-action 'self';
+               base-uri 'self';
+               object-src 'none';
+               frame-src 'none';
+               upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+<title>Comunicados | Painel Facchini</title>
+<meta name="theme-color" content="#0B1E33">
+
+<link rel="icon" href="../assets/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+
+<link rel="preload" href="../assets/fonts/archivo-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/base.css">
+
+<!-- Mesma casca do portal do cliente + a lista de comunicados (mesmo
+     CSS que o cliente vê, pra equipe enxergar o aviso como ele vai sair). -->
+<link rel="stylesheet" href="../css/portal-shell.css">
+<link rel="stylesheet" href="../css/portal-comunicados.css">
+</head>
+
+<body>
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-atendimentos" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 13v-1a8 8 0 0 1 16 0v1"/><rect x="3" y="13" width="4.2" height="6" rx="1.4"/><rect x="16.8" y="13" width="4.2" height="6" rx="1.4"/><path d="M19 19v.5a3 3 0 0 1-3 3h-1.8"/>
+  </symbol>
+  <symbol id="i-comunicados" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10v4h3l6 4V6L6 10H3Z"/><path d="M17 9a4 4 0 0 1 0 6"/>
+  </symbol>
+  <symbol id="i-sino" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.2 9a5.8 5.8 0 0 1 11.6 0c0 3.8 1.4 5.2 1.4 5.2H4.8S6.2 12.8 6.2 9Z"/><path d="M10.2 17.8a1.8 1.8 0 0 0 3.6 0"/>
+  </symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m7 10 5 5 5-5"/>
+  </symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <path d="M4 7h16M4 12h16M4 17h16"/>
+  </symbol>
+  <symbol id="i-fechar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <path d="M6 6l12 12M18 6 6 18"/>
+  </symbol>
+  <symbol id="i-cadeado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="15.3" r="1.3"/>
+  </symbol>
+  <symbol id="i-olho" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+  </symbol>
+  <symbol id="i-olho-fechado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 3l18 18"/>
+    <path d="M10.6 5.2A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a18 18 0 0 1-3.2 4.2M6.5 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7c1.4 0 2.7-.3 3.9-.7"/>
+    <path d="M9.5 10a3 3 0 0 0 4.2 4.2"/>
+  </symbol>
+</svg>
+
+<div class="portal">
+
+  <!-- ==================== AVISO FLUTUANTE: TROCAR SENHA ==================== -->
+  {% if deve_trocar_senha %}
+  <div class="aviso-senha" role="region" aria-label="Troca de senha recomendada" data-aviso-senha>
+    <div class="aviso-senha__caixa">
+      <button class="aviso-senha__fechar" type="button" aria-label="Fechar aviso" data-fechar-aviso-senha>
+        <svg class="icone" aria-hidden="true"><use href="#i-fechar"/></svg>
+      </button>
+
+      <p class="aviso-senha__titulo">Troque sua senha</p>
+      <p class="aviso-senha__texto">Você ainda está com a senha provisória do escritório. Recomendamos trocar por uma só sua.</p>
+
+      <form class="aviso-senha__formulario" method="post" action="#" novalidate data-formulario-troca-senha>
+        <div class="campo">
+          <label for="aviso-nova-senha">Nova senha</label>
+          <div class="campo__caixa">
+            <svg class="icone campo__icone" aria-hidden="true"><use href="#i-cadeado"/></svg>
+            <input type="password" id="aviso-nova-senha" name="novaSenha" autocomplete="new-password"
+                   placeholder="Pelo menos 8 caracteres" required data-campo-senha>
+            <button class="campo__alternar" type="button" aria-label="Mostrar senha" aria-pressed="false" data-alternar-senha>
+              <svg class="icone" aria-hidden="true"><use href="#i-olho-fechado"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="campo">
+          <label for="aviso-confirmacao">Confirme a nova senha</label>
+          <div class="campo__caixa">
+            <svg class="icone campo__icone" aria-hidden="true"><use href="#i-cadeado"/></svg>
+            <input type="password" id="aviso-confirmacao" name="confirmacao" autocomplete="new-password"
+                   placeholder="Digite de novo" required>
+          </div>
+        </div>
+
+        <button class="botao botao--ouro botao--cheio" type="submit">Salvar nova senha</button>
+        <p class="aviso-senha__retorno" role="status" aria-live="polite" data-retorno-troca-senha></p>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ============================ SIDEBAR ============================ -->
+  <aside class="portal__sidebar" id="sidebar" data-sidebar>
+    <div class="portal__marca-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+    <a class="portal__logo" href="https://www.facchiniassessoria.com.br/" aria-label="Facchini Assessoria Contábil — ir para o site">
+      <img src="../assets/logo/facchini-logo-branco.webp" width="640" height="133" alt="Facchini Assessoria Contábil">
+    </a>
+
+    <nav class="portal__nav" aria-label="Navegação do painel">
+      <a class="portal__nav-item" href="equipe-atendimento.html">
+        <svg class="icone" aria-hidden="true"><use href="#i-atendimentos"/></svg> Atendimento
+      </a>
+      <a class="portal__nav-item esta-ativo" href="equipe-comunicados.html" aria-current="page">
+        <svg class="icone" aria-hidden="true"><use href="#i-comunicados"/></svg> Comunicados
+      </a>
+    </nav>
+
+    <div class="portal__sidebar-rodape">
+      <span class="portal__linha-ouro" aria-hidden="true"></span>
+      <p>Contabilidade<br>que impulsiona o seu amanhã</p>
+    </div>
+  </aside>
+
+  <div class="portal__fundo-sidebar" hidden data-fundo-sidebar></div>
+
+  <!-- ============================= ÁREA PRINCIPAL ============================= -->
+  <div class="portal__area">
+
+    <header class="portal__topo">
+      <button class="portal__abrir-menu" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar" data-abrir-sidebar>
+        <svg class="icone" aria-hidden="true"><use href="#i-menu"/></svg>
+      </button>
+
+      <div class="portal__saudacao">
+        <h1>Comunicados</h1>
+        <p>Publique avisos no portal do cliente — pra todos ou pra uma empresa só.</p>
+      </div>
+
+      <button class="portal__sino" type="button" aria-label="Notificações">
+        <svg class="icone" aria-hidden="true"><use href="#i-sino"/></svg>
+      </button>
+
+      <div class="portal__usuario-caixa">
+        <button class="portal__usuario" type="button" aria-haspopup="true" aria-expanded="false" data-menu-usuario>
+          <span class="portal__avatar" aria-hidden="true">{{ nome_usuario[:1]|upper }}</span>
+          <span class="portal__usuario-texto">
+            <strong>{{ nome_usuario }}</strong>
+            <small>Equipe Facchini</small>
+          </span>
+          <svg class="icone" aria-hidden="true"><use href="#i-chevron"/></svg>
+        </button>
+
+        <div class="portal__dropdown" role="menu" hidden data-dropdown-usuario>
+          <a role="menuitem" href="/equipe/logout">
+            <svg class="icone" aria-hidden="true"><use href="#i-fechar"/></svg> Sair
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="portal__conteudo" id="conteudo">
+
+      <section class="cartao" aria-labelledby="titulo-novo-comunicado">
+        <div class="cartao__cabecalho">
+          <div>
+            <h2 class="cartao__titulo" id="titulo-novo-comunicado">
+              <svg class="icone" aria-hidden="true"><use href="#i-comunicados"/></svg>
+              Publicar comunicado
+            </h2>
+            <p class="cartao__subtitulo">Aparece na hora em “Comunicados” e no Início do portal de quem você escolher. Texto simples — quebras de linha são mantidas.</p>
+          </div>
+        </div>
+
+        <form class="formulario-comunicado" novalidate data-formulario-comunicado>
+          <div class="campo">
+            <label for="com-titulo">Título</label>
+            <div class="campo__caixa">
+              <input type="text" id="com-titulo" name="titulo" minlength="3" maxlength="{{ titulo_max }}" placeholder="Ex.: Prazo da DEFIS" required>
+            </div>
+          </div>
+
+          <div class="campo">
+            <label for="com-categoria">Categoria</label>
+            <div class="campo__caixa">
+              <select id="com-categoria" name="categoria" required>
+                {% for valor, nome in categorias.items() %}
+                <option value="{{ valor }}">{{ nome }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="campo">
+            <label for="com-texto">Texto</label>
+            <div class="campo__caixa campo__caixa--area">
+              <textarea id="com-texto" name="texto" rows="6" maxlength="{{ texto_max }}" placeholder="O que o cliente precisa saber" required data-texto-comunicado></textarea>
+            </div>
+            <p class="formulario-comunicado__contador" aria-live="polite" data-contador-texto>0 / {{ texto_max }}</p>
+          </div>
+
+          <fieldset class="formulario-comunicado__destino">
+            <legend>Para quem</legend>
+            <label><input type="radio" name="destino" value="todos" checked data-destino> Todos os clientes</label>
+            <label><input type="radio" name="destino" value="empresa" data-destino> Uma empresa específica</label>
+          </fieldset>
+
+          <div class="campo" hidden data-campo-empresa>
+            <label for="com-empresa">CNPJ ou CPF da empresa</label>
+            <div class="campo__caixa">
+              <input type="text" id="com-empresa" name="empresa" maxlength="20" inputmode="numeric" list="empresas-portal" placeholder="00.000.000/0000-00" autocomplete="off">
+            </div>
+            <!-- Sugestões: só empresas que já têm login no portal. -->
+            <datalist id="empresas-portal">
+              {% for identificador in empresas_portal %}
+              <option value="{{ identificador }}"></option>
+              {% endfor %}
+            </datalist>
+          </div>
+
+          <button class="botao botao--ouro botao--cheio" type="submit">Publicar comunicado</button>
+          <p class="retorno-formulario" role="status" aria-live="polite" data-retorno-comunicado></p>
+        </form>
+      </section>
+
+      <section class="cartao" aria-labelledby="titulo-publicados">
+        <div class="cartao__cabecalho">
+          <div>
+            <h2 class="cartao__titulo" id="titulo-publicados">
+              <svg class="icone" aria-hidden="true"><use href="#i-comunicados"/></svg>
+              Publicados
+            </h2>
+            <p class="cartao__subtitulo">{{ comunicados|length }} comunicado(s) no ar, mais recentes primeiro. Remover tira do portal na hora.</p>
+          </div>
+        </div>
+
+        {% if comunicados %}
+        <ol class="lista-comunicados">
+          {% for c in comunicados %}
+          <li class="comunicado">
+            <article aria-labelledby="comunicado-titulo-{{ c.id }}">
+              <div class="comunicado__meta">
+                <span class="comunicado__categoria comunicado__categoria--{{ c.categoria }}">{{ c.categoria_nome }}</span>
+                {% if c.exclusivo %}
+                <span class="comunicado__exclusivo">Só {{ c.empresa_nome }}</span>
+                {% else %}
+                <span class="comunicado__exclusivo">Todos os clientes</span>
+                {% endif %}
+                <time datetime="{{ c.data_iso }}">{{ c.data }}</time>
+              </div>
+              <h3 class="comunicado__titulo" id="comunicado-titulo-{{ c.id }}">{{ c.titulo }}</h3>
+              <p class="comunicado__texto">{{ c.texto }}</p>
+              <p class="comunicado__autor">Publicado por {{ c.autor_nome }}</p>
+              <div class="comunicado__acoes">
+                <button class="botao-remover" type="button" data-remover-comunicado="{{ c.id }}">Remover</button>
+              </div>
+            </article>
+          </li>
+          {% endfor %}
+        </ol>
+        {% else %}
+        <p class="tabela-documentos__vazio">Nenhum comunicado publicado ainda.</p>
+        {% endif %}
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="../js/equipe.js" defer></script>
+<script src="../js/equipe-comunicados.js" defer></script>
+</body>
+</html>
