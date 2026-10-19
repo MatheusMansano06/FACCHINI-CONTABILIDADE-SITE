@@ -1,0 +1,72 @@
+/* =============================================================
+   Painel da equipe — Leads do site. Só o que portal-shell.css não
+   cobre: mensagem longa com quebra de linha, links de contato e
+   paginação. Tudo o mais (tabela, etiquetas, botão "contatado",
+   que reaproveita .botao-pago) vem da casca.
+   ============================================================= */
+
+/* div dentro da célula: min-width em <td> é ignorado pelos navegadores. */
+.leads__mensagem {
+  min-width: 16rem;
+  max-width: 28rem;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.leads__contato {
+  display: grid;
+  gap: 0.2rem;
+}
+.leads__contato a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--navy-900);
+}
+.leads__contato a:hover { color: var(--ouro-escuro); text-decoration: underline; }
+.leads__contato .icone { width: 1em; height: 1em; flex: none; }
+
+/* Botão "contatado": visual de .botao-pago (portal-shell.css), mas fora
+   de .tabela-documentos__acoes, então o hover fica definido aqui. */
+.leads__contatado { cursor: pointer; transition: border-color var(--transicao), color var(--transicao); }
+.leads__contatado:hover { border-color: var(--ouro); color: var(--navy-900); }
+.leads__contatado.botao-pago--ativo:hover { color: #1E8449; border-color: transparent; background: rgb(43 138 88 / 0.18); }
+.leads__contatado:disabled { opacity: 0.6; cursor: progress; }
+
+.leads__secundario {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: var(--t-xs);
+  color: var(--tinta-suave);
+}
+.leads__secundario:empty { display: none; }
+
+.leads__retorno {
+  margin-bottom: var(--e-3);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: #B3261E;
+}
+.leads__retorno:empty { display: none; }
+
+.leads__paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e-3);
+  margin-top: var(--e-4);
+}
+.leads__paginacao a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--navy-900);
+  border: 1.5px solid var(--borda);
+  border-radius: var(--raio-sm);
+}
+.leads__paginacao a:hover { background: var(--osso); border-color: var(--ouro); }
+.leads__paginacao .icone { width: 1.05em; height: 1.05em; }
+.leads__pagina-atual { font-size: var(--t-sm); color: var(--tinta-suave); }

@@ -111,3 +111,37 @@ def inicializar_schema() -> None:
                 UNIQUE (identificador_acessorias, vencimento, valor, competencia)
             )
         """)
+
+        # Leads do formulário de contato da landing page (POST /api/contato).
+        # consentimento_em guarda quando a pessoa marcou a autorização da
+        # LGPD — é a prova do consentimento, por isso fica junto do lead.
+        # contatado_em vazio = ainda ninguém da equipe retornou.
+        conexao.execute("""
+            CREATE TABLE IF NOT EXISTS leads (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                empresa TEXT NOT NULL DEFAULT '',
+                email TEXT NOT NULL,
+                telefone TEXT NOT NULL,
+                segmento TEXT NOT NULL DEFAULT '',
+                mensagem TEXT NOT NULL DEFAULT '',
+                origem TEXT NOT NULL DEFAULT '',
+                ip TEXT NOT NULL DEFAULT '',
+                user_agent TEXT NOT NULL DEFAULT '',
+                consentimento_em TEXT NOT NULL,
+                criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+                contatado_em TEXT,
+                contatado_por TEXT
+            )
+        """)
+        # Limite de envios por IP do formulário de contato. Tabela à parte
+        # (e não só contar em leads) porque envios barrados pela armadilha
+        # anti-robô também contam, mas não viram lead.
+        conexao.execute("""
+            CREATE TABLE IF NOT EXISTS contato_envios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ip TEXT NOT NULL,
+                criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+        conexao.execute("CREATE INDEX IF NOT EXISTS idx_contato_envios_ip ON contato_envios (ip, criado_em)")

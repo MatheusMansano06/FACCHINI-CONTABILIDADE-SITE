@@ -10,11 +10,10 @@
 'use strict';
 
 const CONFIG = {
-  /* Endpoint que recebe os leads. Enquanto estiver vazio, o formulário
-     valida os dados e direciona a pessoa para o WhatsApp.
-     Ao preencher, inclua o domínio em connect-src e form-action na CSP
-     do index.html — senão o navegador bloqueia o envio. Ver docs/DEPLOY.md */
-  endpointFormulario: '',
+  /* Endpoint que recebe os leads: POST /api/contato em backend/app.py, no
+     mesmo domínio da página (a CSP connect-src 'self' já permite). Se
+     ficar vazio, o formulário volta a só validar e abrir o WhatsApp. */
+  endpointFormulario: '/api/contato',
 
   whatsapp: '551933811008',
 };
@@ -313,18 +312,19 @@ const REGRAS = {
   },
 };
 
+function marcarCampo(campo, erro) {
+  const alvoErro = document.querySelector(`[data-erro-de="${campo.name}"]`);
+  if (alvoErro) alvoErro.textContent = erro;
+  campo.closest('.campo')?.classList.toggle('campo--invalido', Boolean(erro));
+  campo.setAttribute('aria-invalid', String(Boolean(erro)));
+}
+
 function validarCampo(campo) {
   const regra = REGRAS[campo.name];
   if (!regra) return true;
 
   const ok = regra.valido(campo.value, campo);
-  const alvoErro = document.querySelector(`[data-erro-de="${campo.name}"]`);
-  const embalagem = campo.closest('.campo');
-
-  if (alvoErro) alvoErro.textContent = ok ? '' : regra.erro;
-  embalagem?.classList.toggle('campo--invalido', !ok);
-  campo.setAttribute('aria-invalid', String(!ok));
-
+  marcarCampo(campo, ok ? '' : regra.erro);
   return ok;
 }
 
@@ -379,6 +379,7 @@ function iniciarFormulario() {
       segmento: valorDe('segmento'),
       mensagem: valorDe('mensagem'),
       origem: window.location.pathname,
+      consentimento: Boolean(form.elements.consentimento?.checked),
     };
 
     // Sem endpoint configurado, o WhatsApp é o caminho que realmente funciona hoje
@@ -401,14 +402,52 @@ function iniciarFormulario() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify(dados),
+        signal: AbortSignal.timeout?.(15000),
       });
+      const corpo = await resposta.json().catch(() => ({}));
 
-      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+      if (resposta.ok) {
+        form.reset();
+        responder(
+          `Obrigado, ${dados.nome.split(' ')[0]}! Recebemos sua mensagem e um especialista ` +
+          'retorna em até 1 dia útil.',
+          'ok'
+        );
+        return;
+      }
 
-      form.reset();
-      responder('Mensagem enviada. Retornamos em até 1 dia útil.', 'ok');
+      // Erros de validação do servidor: destaca os mesmos campos que a
+      // validação do navegador destacaria
+      if (resposta.status === 400 && corpo.campos) {
+        const campos = Object.entries(corpo.campos)
+          .map(([nome, erro]) => {
+            const campo = form.elements[nome];
+            if (!campo) return null;
+            marcarCampo(campo, String(erro));
+            const extra = campo.closest('details');
+            if (extra) extra.open = true;
+            return campo;
+          })
+          .filter(Boolean);
+        responder(corpo.erro || 'Revise os campos destacados para continuar.', 'erro');
+        campos[0]?.focus();
+        return;
+      }
+
+      if (resposta.status === 429) {
+        responder(
+          corpo.erro || 'Recebemos vários envios seguidos. Tente mais tarde ou chame no WhatsApp logo abaixo.',
+          'erro'
+        );
+        return;
+      }
+
+      throw new Error(`HTTP ${resposta.status}`);
     } catch {
-      responder('Não foi possível enviar agora. Tente pelo WhatsApp logo abaixo.', 'erro');
+      responder(
+        'Não foi possível enviar agora. Tente de novo em instantes ou chame no WhatsApp logo abaixo.',
+        'erro'
+      );
     } finally {
       botao.disabled = false;
       if (botao.firstChild) botao.firstChild.textContent = `${rotuloBotao} `;

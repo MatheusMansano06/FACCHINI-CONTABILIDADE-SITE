@@ -942,6 +942,276 @@ class ArquivosEstaticos(StaticFiles):
         return resposta
 
 
+# --- Formulário de contato da landing page (leads) -----------------------
+# A landing page (index.html + js/main.js) envia o formulário para
+# POST /api/contato; o lead fica na tabela leads (ver database.py) e a
+# equipe vê tudo em /pages/equipe-leads.html. Imports ficam aqui, junto do
+# bloco, pra não mexer no topo do arquivo.
+import json  # noqa: E402
+import re  # noqa: E402
+from contextlib import closing  # noqa: E402
+from datetime import timedelta, timezone  # noqa: E402
+
+from starlette.concurrency import run_in_threadpool  # noqa: E402
+
+LIMITE_CONTATO_POR_IP_HORA = 5
+# Rede de segurança caso alguém troque de IP (ou forje X-Forwarded-For) pra
+# fugir do limite por IP: acima disso, ninguém envia por uma hora.
+LIMITE_CONTATO_GLOBAL_HORA = 60
+TAMANHO_MAXIMO_CORPO_CONTATO = 16 * 1024
+LEADS_POR_PAGINA = 25
+# Brasil não tem horário de verão desde 2019 — offset fixo evita depender
+# do pacote tzdata no container.
+FUSO_BRASILIA = timezone(timedelta(hours=-3))
+
+_LIMITES_CONTATO = {
+    "nome": 100, "empresa": 80, "email": 254, "telefone": 25,
+    "segmento": 60, "mensagem": 1000, "origem": 200,
+}
+_RE_EMAIL = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]{2,}$")
+_RE_CONTROLE = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
+
+
+def _limpar_linha(valor: str) -> str:
+    """Campo de uma linha: tira caracteres de controle e junta espaços."""
+    return " ".join(_RE_CONTROLE.sub(" ", valor).split())
+
+
+def _limpar_texto(valor: str) -> str:
+    """Campo de várias linhas (mensagem): mantém só a quebra de linha."""
+    valor = valor.replace("\r\n", "\n").replace("\r", "\n").replace("\t", " ")
+    return _RE_CONTROLE.sub("", valor).strip()
+
+
+def _validar_contato(corpo: dict) -> tuple[dict, dict]:
+    """Devolve (dados limpos, erros por campo). Mensagens iguais às do
+    js/main.js, pra pessoa ver o mesmo texto se a validação do navegador
+    for contornada."""
+    dados: dict[str, str] = {}
+    erros: dict[str, str] = {}
+    for campo, limite in _LIMITES_CONTATO.items():
+        bruto = corpo.get(campo, "")
+        if bruto is None:
+            bruto = ""
+        if not isinstance(bruto, str):
+            erros[campo] = "Valor inválido."
+            dados[campo] = ""
+            continue
+        limpo = _limpar_texto(bruto) if campo == "mensagem" else _limpar_linha(bruto)
+        if len(limpo) > limite:
+            erros[campo] = f"Use no máximo {limite} caracteres."
+        dados[campo] = limpo
+
+    if "nome" not in erros and len(dados["nome"]) < 2:
+        erros["nome"] = "Informe o seu nome."
+    if "email" not in erros:
+        dados["email"] = dados["email"].lower()
+        if not _RE_EMAIL.match(dados["email"]):
+            erros["email"] = "Informe um e-mail válido."
+    if "telefone" not in erros:
+        digitos = re.sub(r"\D", "", dados["telefone"])
+        if len(digitos) in (12, 13) and digitos.startswith("55"):
+            digitos = digitos[2:]  # veio com o código do país
+        if len(digitos) not in (10, 11) or digitos[0] == "0":
+            erros["telefone"] = "Informe um WhatsApp com DDD."
+        dados["telefone"] = digitos
+    if corpo.get("consentimento") is not True:
+        erros["consentimento"] = "É preciso autorizar o contato para enviar."
+    return dados, erros
+
+
+def _registrar_contato(dados: dict | None, ip: str, user_agent: str) -> int | str:
+    """Confere o limite e grava, tudo numa transação só (BEGIN IMMEDIATE),
+    pra dois envios simultâneos do mesmo IP não passarem os dois pelo
+    limite. dados=None é envio barrado pela armadilha anti-robô: conta no
+    limite, mas não vira lead. Devolve o id do lead, 0 (robô) ou
+    "limite"."""
+    with closing(obter_conexao()) as conexao, conexao:
+        conexao.execute("BEGIN IMMEDIATE")
+        conexao.execute("DELETE FROM contato_envios WHERE criado_em < datetime('now', '-1 day')")
+        do_ip, total = conexao.execute(
+            """SELECT COALESCE(SUM(ip = ?), 0), COUNT(*) FROM contato_envios
+               WHERE criado_em >= datetime('now', '-1 hour')""",
+            (ip,),
+        ).fetchone()
+        if do_ip >= LIMITE_CONTATO_POR_IP_HORA or total >= LIMITE_CONTATO_GLOBAL_HORA:
+            return "limite"
+        conexao.execute("INSERT INTO contato_envios (ip) VALUES (?)", (ip,))
+        if dados is None:
+            return 0
+        cursor = conexao.execute(
+            """INSERT INTO leads (nome, empresa, email, telefone, segmento, mensagem,
+                                  origem, ip, user_agent, consentimento_em)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))""",
+            (dados["nome"], dados["empresa"], dados["email"], dados["telefone"], dados["segmento"],
+             dados["mensagem"], dados["origem"], ip, user_agent),
+        )
+        return cursor.lastrowid
+
+
+@app.post("/api/contato")
+async def api_contato(request: Request):
+    # Exigir JSON barra o envio por <form> de outro site (que só consegue
+    # mandar text/plain ou urlencoded sem passar por CORS).
+    if "application/json" not in request.headers.get("content-type", ""):
+        return JSONResponse({"erro": "Formato de envio inválido."}, status_code=415)
+    bruto = await request.body()
+    if len(bruto) > TAMANHO_MAXIMO_CORPO_CONTATO:
+        return JSONResponse({"erro": "Mensagem grande demais."}, status_code=413)
+    try:
+        corpo = json.loads(bruto)
+    except ValueError:
+        corpo = None
+    if not isinstance(corpo, dict):
+        return JSONResponse({"erro": "Formato de envio inválido."}, status_code=400)
+
+    # Atrás do proxy do Railway, o uvicorn (--proxy-headers) já põe aqui o
+    # IP do visitante vindo de X-Forwarded-For.
+    ip = (request.client.host if request.client else "") or "desconhecido"
+    user_agent = request.headers.get("user-agent", "")[:300]
+
+    # Armadilha anti-robô (campo "site" escondido): responde como sucesso
+    # pra não ensinar o robô a contorná-la, mas não guarda nada.
+    if corpo.get("site"):
+        await run_in_threadpool(_registrar_contato, None, ip, user_agent)
+        return {"ok": True}
+
+    dados, erros = _validar_contato(corpo)
+    if erros:
+        return JSONResponse(
+            {"erro": "Revise os campos destacados para continuar.", "campos": erros}, status_code=400
+        )
+
+    resultado = await run_in_threadpool(_registrar_contato, dados, ip, user_agent)
+    if resultado == "limite":
+        return JSONResponse(
+            {"erro": "Recebemos vários envios seguidos da sua conexão. Tente de novo mais tarde "
+                     "ou fale com a gente pelo WhatsApp."},
+            status_code=429,
+        )
+
+    # Lead gravado (id em `resultado`): aqui é o ponto para disparar o aviso
+    # por e-mail ao escritório.
+    return {"ok": True}
+
+
+def _formatar_data_utc(texto: str | None) -> str:
+    """SQLite grava datetime('now') em UTC; a equipe lê no horário de Brasília."""
+    if not texto:
+        return ""
+    try:
+        momento = datetime.strptime(texto, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return texto
+    return momento.astimezone(FUSO_BRASILIA).strftime("%d/%m/%Y %H:%M")
+
+
+def _formatar_telefone(digitos: str) -> str:
+    if len(digitos) == 11:
+        return f"({digitos[:2]}) {digitos[2:7]}-{digitos[7:]}"
+    if len(digitos) == 10:
+        return f"({digitos[:2]}) {digitos[2:6]}-{digitos[6:]}"
+    return digitos
+
+
+def _listar_leads(pagina: int) -> dict:
+    with closing(obter_conexao()) as conexao:
+        total = conexao.execute("SELECT COUNT(*) FROM leads").fetchone()[0]
+        pendentes = conexao.execute("SELECT COUNT(*) FROM leads WHERE contatado_em IS NULL").fetchone()[0]
+        total_paginas = max(1, -(-total // LEADS_POR_PAGINA))
+        pagina = min(max(pagina, 1), total_paginas)
+        linhas = conexao.execute(
+            """SELECT id, nome, empresa, email, telefone, segmento, mensagem, origem,
+                      criado_em, contatado_em, contatado_por
+               FROM leads ORDER BY id DESC LIMIT ? OFFSET ?""",
+            (LEADS_POR_PAGINA, (pagina - 1) * LEADS_POR_PAGINA),
+        ).fetchall()
+    leads = [
+        {
+            "id": linha["id"],
+            "nome": linha["nome"],
+            "empresa": linha["empresa"],
+            "email": linha["email"],
+            "telefone": _formatar_telefone(linha["telefone"]),
+            "whatsapp": f"55{linha['telefone']}",
+            "segmento": linha["segmento"],
+            "mensagem": linha["mensagem"],
+            "origem": linha["origem"],
+            "recebido_em": _formatar_data_utc(linha["criado_em"]),
+            "contatado": bool(linha["contatado_em"]),
+            "contatado_em": _formatar_data_utc(linha["contatado_em"]),
+            "contatado_por": linha["contatado_por"] or "",
+        }
+        for linha in linhas
+    ]
+    return {
+        "leads": leads,
+        "total": total,
+        "pendentes": pendentes,
+        "pagina": pagina,
+        "total_paginas": total_paginas,
+    }
+
+
+@app.get("/pages/equipe-leads.html")
+async def pagina_equipe_leads(request: Request):
+    guarda = _guarda_equipe(request)
+    if guarda:
+        return guarda
+    try:
+        pagina = int(request.query_params.get("pagina", 1))
+    except ValueError:
+        pagina = 1
+    contexto = await run_in_threadpool(_listar_leads, pagina)
+    contexto.update({
+        "nome_usuario": request.session.get("funcionario_nome", "equipe"),
+        "deve_trocar_senha": bool(request.session.get("funcionario_deve_trocar_senha")),
+    })
+    resposta = templates.TemplateResponse(request, "equipe-leads.html", contexto)
+    # Dados pessoais de quem pediu contato: nada de guardar em cache.
+    resposta.headers["Cache-Control"] = "no-store"
+    return resposta
+
+
+def _alternar_contatado(lead_id: int, funcionario: str) -> dict | None:
+    with closing(obter_conexao()) as conexao, conexao:
+        linha = conexao.execute("SELECT contatado_em FROM leads WHERE id = ?", (lead_id,)).fetchone()
+        if not linha:
+            return None
+        if linha["contatado_em"]:
+            conexao.execute("UPDATE leads SET contatado_em = NULL, contatado_por = NULL WHERE id = ?", (lead_id,))
+        else:
+            conexao.execute(
+                "UPDATE leads SET contatado_em = datetime('now'), contatado_por = ? WHERE id = ?",
+                (funcionario, lead_id),
+            )
+        atual = conexao.execute(
+            "SELECT contatado_em, contatado_por FROM leads WHERE id = ?", (lead_id,)
+        ).fetchone()
+    return {
+        "contatado": bool(atual["contatado_em"]),
+        "contatado_em": _formatar_data_utc(atual["contatado_em"]),
+        "contatado_por": atual["contatado_por"] or "",
+    }
+
+
+@app.post("/api/equipe/leads/alternar-contatado")
+async def api_alternar_lead_contatado(request: Request):
+    if not _tem_sessao_equipe(request):
+        return JSONResponse({"erro": "Sessão expirada. Faça login de novo."}, status_code=401)
+    try:
+        corpo = await request.json()
+        lead_id = int(corpo.get("id"))
+    except (ValueError, TypeError, AttributeError):
+        return JSONResponse({"erro": "Lead inválido."}, status_code=400)
+
+    funcionario = request.session.get("funcionario_nome", "equipe")
+    resultado = await run_in_threadpool(_alternar_contatado, lead_id, funcionario)
+    if resultado is None:
+        return JSONResponse({"erro": "Lead não encontrado."}, status_code=404)
+    return {"ok": True, **resultado}
+
+
 # Um app só para os dois domínios: www.facchiniassessoria.com.br é a lead
 # page, portal.facchiniassessoria.com.br cai direto no login.
 def _no_portal(request: Request) -> bool:
