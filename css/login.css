@@ -1,0 +1,224 @@
+/* =============================================================
+   LOGIN — tela de acesso do cliente.
+   Depende só de base.css (tokens, reset, botão). Não referencia
+   nenhuma classe de site.css, e site.css não referencia nenhuma
+   classe daqui — as duas páginas podem ser editadas sem risco de
+   uma quebrar a outra.
+   ============================================================= */
+
+body { background: var(--osso); }
+
+.acesso { min-height: 100svh; }
+
+.acesso__grade {
+  display: grid;
+  grid-template-columns: minmax(0, 46fr) minmax(0, 54fr);
+  min-height: 100svh;
+}
+
+/* ===================== PAINEL DO FORMULÁRIO ===================== */
+.acesso__painel-formulario {
+  display: flex;
+  align-items: center;
+  background: var(--osso);
+}
+
+.acesso__conteudo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-6);
+  width: 100%;
+  max-width: 27rem;
+  margin-inline: auto;
+  padding: var(--e-7) clamp(1.5rem, 4vw, 2rem);
+}
+
+.acesso__marca { align-self: flex-start; }
+.acesso__logo { width: clamp(10rem, 16vw, 12rem); height: auto; }
+
+.acesso__cabecalho { display: flex; flex-direction: column; gap: var(--e-2); }
+
+.acesso__linha-ouro {
+  display: block;
+  width: 2.5rem;
+  height: 3px;
+  border-radius: var(--raio-pill);
+  background: var(--ouro);
+}
+
+.acesso__titulo {
+  font-size: var(--t-xl);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--navy-900);
+}
+.acesso__titulo strong { font-weight: 800; }
+
+.acesso__subtitulo {
+  font-size: var(--t-sm);
+  color: var(--tinta-suave);
+}
+
+/* --------------------------------- formulário --------------------------------- */
+.acesso__formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-5);
+}
+
+.campo { display: grid; gap: var(--e-2); }
+
+.campo label {
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--navy-900);
+}
+
+.campo__caixa {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+  padding-inline: var(--e-4);
+  background: var(--branco);
+  border: 1.5px solid var(--borda);
+  border-radius: var(--raio-sm);
+  transition: border-color var(--transicao), box-shadow var(--transicao);
+}
+.campo__caixa:hover { border-color: var(--navy-600); }
+.campo__caixa:focus-within {
+  border-color: var(--ouro);
+  box-shadow: 0 0 0 3px rgb(217 164 65 / 0.22);
+}
+
+.campo__icone { color: var(--tinta-suave); flex: none; }
+
+.campo__caixa input {
+  flex: 1;
+  min-width: 0;
+  padding-block: 0.85rem;
+  font-size: var(--t-sm);
+  color: var(--tinta);
+  background: transparent;
+  border: none;
+}
+.campo__caixa input:focus { outline: none; }
+.campo__caixa input::placeholder { color: var(--tinta-suave); opacity: 0.75; }
+
+.campo__alternar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: var(--e-1);
+  color: var(--tinta-suave);
+  border-radius: var(--raio-sm);
+  transition: color var(--transicao);
+}
+.campo__alternar:hover { color: var(--navy-900); }
+
+.campo__erro {
+  font-size: var(--t-xs);
+  color: #B3261E;
+}
+.campo__erro:empty { display: none; }
+
+.campo--invalido .campo__caixa { border-color: #B3261E; }
+
+.acesso__entrar { margin-top: var(--e-2); }
+
+.acesso__retorno {
+  font-size: var(--t-sm);
+  font-weight: 500;
+  text-align: center;
+  color: var(--tinta-suave);
+}
+.acesso__retorno:empty { display: none; }
+.acesso__retorno.esta-erro { color: #B3261E; }
+
+.acesso__esqueci {
+  align-self: center;
+  font-size: var(--t-sm);
+  color: var(--tinta-suave);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--transicao);
+}
+.acesso__esqueci:hover { color: var(--ouro-escuro); }
+
+/* --------------------------------- rodapé do painel --------------------------------- */
+.acesso__rodape {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-3);
+  margin-top: var(--e-4);
+}
+
+.acesso__tagline {
+  font-family: var(--fonte-titulo);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+
+/* ========================= PAINEL DA FOTO ========================= */
+.acesso__painel-foto { position: relative; overflow: hidden; }
+
+.acesso__foto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 60% 50%;
+}
+
+.acesso__vinheta {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgb(6 18 32 / 0.35) 0%, rgb(6 18 32 / 0) 30%),
+    linear-gradient(0deg, rgb(6 18 32 / 0.55) 0%, rgb(6 18 32 / 0) 40%),
+    linear-gradient(180deg, rgb(6 18 32 / 0.4) 0%, rgb(6 18 32 / 0) 30%);
+}
+
+.acesso__marca-vertical {
+  position: absolute;
+  top: var(--e-6);
+  right: var(--e-5);
+  display: flex;
+  align-items: center;
+  gap: var(--e-2);
+  writing-mode: vertical-rl;
+  font-family: var(--fonte-titulo);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.8);
+}
+.acesso__marca-vertical span { color: var(--ouro); }
+
+.acesso__rodape-foto {
+  position: absolute;
+  right: var(--e-6);
+  bottom: var(--e-6);
+  text-align: right;
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.85);
+}
+.acesso__rodape-foto .acesso__linha-ouro { margin-left: auto; margin-bottom: var(--e-3); }
+
+/* ============================ RESPONSIVO ============================ */
+@media (max-width: 880px) {
+  .acesso__grade { grid-template-columns: minmax(0, 1fr); }
+  .acesso__painel-foto { display: none; }
+  .acesso__conteudo { padding-block: var(--e-6); }
+}
+
+@media (max-width: 420px) {
+  .campo__caixa { padding-inline: var(--e-3); }
+}

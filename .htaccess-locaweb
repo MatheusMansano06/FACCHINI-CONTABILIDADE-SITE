@@ -1,0 +1,4 @@
+# Vai pra public_html da Locaweb como .htaccess. O site roda no Railway
+# (www); a hospedagem da Locaweb só redireciona o domínio sem www pra lá.
+RewriteEngine On
+RewriteRule ^ https://www.facchiniassessoria.com.br%{REQUEST_URI} [L,R=301]

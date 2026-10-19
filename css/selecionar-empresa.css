@@ -1,0 +1,60 @@
+/* =============================================================
+   SELECIONAR EMPRESA — lista de cartões clicáveis, exclusiva desta
+   tela. O resto do layout (painel + foto) vem de login.css; aqui só
+   o que é específico da lista.
+   ============================================================= */
+
+.lista-empresas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-3);
+}
+
+.empresa-card {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+  width: 100%;
+  padding: var(--e-4);
+  text-align: left;
+  background: var(--branco);
+  border: 1.5px solid var(--borda);
+  border-radius: var(--raio-sm);
+  transition: border-color var(--transicao), box-shadow var(--transicao), transform var(--transicao);
+}
+.empresa-card:hover {
+  border-color: var(--ouro);
+  box-shadow: 0 0 0 3px rgb(217 164 65 / 0.14);
+}
+.empresa-card:active { transform: scale(0.99); }
+
+.empresa-card__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.6rem;
+  height: 2.6rem;
+  color: var(--ouro-escuro);
+  background: rgb(217 164 65 / 0.14);
+  border-radius: var(--raio-sm);
+}
+.empresa-card__avatar .icone { width: 1.2rem; height: 1.2rem; }
+
+.empresa-card__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+.empresa-card__texto strong {
+  font-size: var(--t-sm);
+  color: var(--navy-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.empresa-card__texto small { font-size: var(--t-xs); color: var(--tinta-suave); }
+
+.empresa-card__seta { flex: none; width: 1.1rem; height: 1.1rem; color: var(--tinta-suave); }
+.empresa-card:hover .empresa-card__seta { color: var(--ouro-escuro); }

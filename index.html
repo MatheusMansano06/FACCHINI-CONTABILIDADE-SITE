@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Política de segurança de conteúdo: tudo vem da própria origem.
+     Sem CDN, sem fontes de terceiros, sem scripts externos.
+     frame-ancestors e HSTS precisam vir por header do servidor — ver docs/DEPLOY.md -->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               img-src 'self' data:;
+               font-src 'self';
+               style-src 'self';
+               script-src 'self';
+               connect-src 'self';
+               form-action 'self';
+               base-uri 'self';
+               object-src 'none';
+               frame-src 'none';
+               upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+<title>Facchini Assessoria Contábil | Contabilidade estratégica em Campinas/SP</title>
+<meta name="description" content="Mais que contabilidade: estratégia para o seu crescimento. Contabilidade, fiscal, departamento pessoal e BPO financeiro com aplicativo próprio e atendimento direto. Campinas/SP.">
+<meta name="author" content="Facchini Assessoria Contábil">
+<meta name="theme-color" content="#0B1E33">
+
+<link rel="canonical" href="https://www.facchiniassessoria.com.br/">
+
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="Facchini Assessoria Contábil">
+<meta property="og:title" content="Facchini Assessoria Contábil | Estratégia para o seu crescimento">
+<meta property="og:description" content="Transformamos números em decisões, com tecnologia, proximidade e especialistas ao seu lado.">
+<meta property="og:url" content="https://www.facchiniassessoria.com.br/">
+<meta property="og:image" content="https://www.facchiniassessoria.com.br/assets/images/hero-recepcao.webp">
+<meta property="og:image:alt" content="Recepção do escritório da Facchini Assessoria Contábil">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="assets/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<link rel="preload" href="assets/fonts/archivo-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/site.css">
+
+<!-- Síncrono de propósito: marca que há JS antes da primeira pintura,
+     evitando que o conteúdo pisque ou suma se o JS falhar. -->
+<script src="js/deteccao.js"></script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AccountingService",
+  "name": "Facchini Assessoria Contábil",
+  "description": "Assessoria contábil, fiscal, departamento pessoal e BPO financeiro para empresas de diversos segmentos.",
+  "url": "https://www.facchiniassessoria.com.br/",
+  "logo": "https://www.facchiniassessoria.com.br/assets/logo/facchini-logo.png",
+  "image": "https://www.facchiniassessoria.com.br/assets/images/hero-recepcao.webp",
+  "foundingDate": "2009",
+  "telephone": "+551933811008",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Campinas",
+    "addressRegion": "SP",
+    "addressCountry": "BR"
+  },
+  "areaServed": { "@type": "Country", "name": "Brasil" },
+  "knowsLanguage": "pt-BR",
+  "slogan": "Mais que contabilidade: estratégia para o seu crescimento."
+}
+</script>
+</head>
+
+<body>
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+<!-- Barra de progresso da leitura: animada pelo scroll, em CSS puro -->
+<div class="progresso" aria-hidden="true"><span class="progresso__barra"></span></div>
+
+<!-- Sprite de ícones: um único SVG inline, sem requisições extras e sem icon font -->
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-consultivo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/>
+  </symbol>
+  <symbol id="i-tecnologia" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>
+  </symbol>
+  <symbol id="i-seguranca" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3 5 6v5.5c0 4.2 2.9 8.1 7 9.5 4.1-1.4 7-5.3 7-9.5V6l-7-3Z"/><path d="m9.2 12 2 2 3.6-3.8"/>
+  </symbol>
+  <symbol id="i-contabil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>
+  </symbol>
+  <symbol id="i-fiscal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 19h16"/><path d="m5 15 4.5-5 3.5 3.5L19 6"/><path d="M15 6h4v4"/>
+  </symbol>
+  <symbol id="i-pessoal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.5 11a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"/><path d="M3 19.4a6.5 6.5 0 0 1 13 0"/><path d="M16.5 11.2a2.6 2.6 0 1 0 0-5.2"/><path d="M18 14.2a5.2 5.2 0 0 1 3 4.7"/>
+  </symbol>
+  <symbol id="i-bpo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 20V10M9.3 20V5M14.7 20v-8M20 20V8"/>
+  </symbol>
+  <symbol id="i-abertura" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 21V6l7-3v18"/><path d="M11 10h6a2 2 0 0 1 2 2v9"/><path d="M3 21h18M7 8v.01M7 12v.01M7 16v.01M15 14v.01M15 17v.01"/>
+  </symbol>
+  <symbol id="i-consultoria" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.5.4.8 1 .9 1.6l.1.6h5.2l.1-.6c.1-.6.4-1.2.9-1.6A6 6 0 0 0 12 3Z"/>
+  </symbol>
+  <symbol id="i-certificado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14.5v2.5"/>
+  </symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m5 12.5 4.5 4.5L19 7.5"/>
+  </symbol>
+  <symbol id="i-humanizado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 20.5S4 15.9 4 10.4A4.4 4.4 0 0 1 12 7.8a4.4 4.4 0 0 1 8 2.6c0 5.5-8 10.1-8 10.1Z"/>
+  </symbol>
+  <symbol id="i-rapido" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="8.5"/><path d="M12 7.2V12l3.2 2"/>
+  </symbol>
+  <symbol id="i-personalizado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10.3 4.5 12 3l1.7 1.5 2.2-.4.8 2.1 2.1.8-.4 2.2L20 12l-1.6 1.8.4 2.2-2.1.8-.8 2.1-2.2-.4L12 21l-1.7-1.5-2.2.4-.8-2.1-2.1-.8.4-2.2L4 12l1.6-1.8-.4-2.2 2.1-.8.8-2.1 2.2.4Z"/><path d="m9.5 12 1.8 1.8 3.4-3.6"/>
+  </symbol>
+  <symbol id="i-telefone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 3.5 9.2 8 7.4 9.9a12.4 12.4 0 0 0 6.7 6.7L16 14.8l4.5 2.2v3a1.5 1.5 0 0 1-1.7 1.5C10.7 20.7 3.3 13.3 2.5 5.2A1.5 1.5 0 0 1 4 3.5h3Z"/>
+  </symbol>
+  <symbol id="i-email" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/>
+  </symbol>
+  <symbol id="i-local" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 21.5s7-6.1 7-11.1a7 7 0 1 0-14 0c0 5 7 11.1 7 11.1Z"/><circle cx="12" cy="10.2" r="2.6"/>
+  </symbol>
+  <symbol id="i-whatsapp" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3.1.8.8-3-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.6-6.1c-.3-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.6.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.4 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3A2.9 2.9 0 0 0 6.8 12a5 5 0 0 0 1 2.7 11.4 11.4 0 0 0 4.4 3.9c1.6.6 2.2.7 3 .6a2.5 2.5 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .1-1.2c0-.1-.2-.2-.5-.3Z"/>
+  </symbol>
+  <symbol id="i-instagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.3 6.7v.01"/>
+  </symbol>
+  <symbol id="i-linkedin" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M4.5 3.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM3 9h3v12H3V9Zm6 0h2.9v1.7h.05A3.2 3.2 0 0 1 14.8 9c3 0 3.6 2 3.6 4.6V21h-3v-6.1c0-1.5 0-3.3-2-3.3s-2.3 1.6-2.3 3.2V21H9V9Z"/>
+  </symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <path d="M4 7h16M4 12h16M4 17h16"/>
+  </symbol>
+  <symbol id="i-fechar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <path d="M6 6l12 12M18 6 6 18"/>
+  </symbol>
+  <symbol id="i-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 12h15m-5.5-5.5L19 12l-5.5 5.5"/>
+  </symbol>
+  <symbol id="i-seta-baixo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 4.5v15m-5.5-5.5L12 19.5 17.5 14"/>
+  </symbol>
+  <symbol id="i-mais" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <path d="M12 5v14M5 12h14"/>
+  </symbol>
+</svg>
+
+<!-- ============================ CABEÇALHO ============================ -->
+<header class="cabecalho" id="cabecalho" data-cabecalho>
+  <div class="container cabecalho__interno">
+    <a class="cabecalho__marca" href="#topo" aria-label="Facchini Assessoria Contábil — ir para o início">
+      <img src="assets/logo/facchini-logo-branco.webp" width="640" height="133"
+           alt="Facchini Assessoria Contábil" class="cabecalho__logo" fetchpriority="high">
+    </a>
+
+    <nav class="navegacao" id="menu-principal" aria-label="Navegação principal" data-menu>
+      <button class="navegacao__fechar" type="button" aria-label="Fechar menu" data-menu-fechar>
+        <svg class="icone" aria-hidden="true"><use href="#i-fechar"/></svg>
+      </button>
+
+      <ul class="navegacao__lista">
+        <li><a class="navegacao__link" href="#topo">Início</a></li>
+        <li><a class="navegacao__link" href="#numeros">Sobre nós</a></li>
+        <li><a class="navegacao__link" href="#solucoes">Soluções</a></li>
+        <li><a class="navegacao__link" href="#segmentos">Segmentos</a></li>
+        <li><a class="navegacao__link" href="#duvidas">Dúvidas</a></li>
+        <li><a class="navegacao__link" href="#contato">Contato</a></li>
+      </ul>
+
+      <div class="navegacao__acoes">
+        <!-- Termo "Área do Cliente" em vez de "Login": aqui é o acesso de
+             quem já é cliente da contabilidade, não um cadastro genérico. -->
+        <a class="botao botao--contorno navegacao__area" href="https://portal.facchiniassessoria.com.br/pages/login.html">
+          <svg class="icone" aria-hidden="true"><use href="#i-consultivo"/></svg>
+          Área do Cliente
+        </a>
+        <a class="botao botao--ouro navegacao__cta" href="#contato">
+          Falar com especialista
+          <svg class="icone" aria-hidden="true"><use href="#i-seta"/></svg>
+        </a>
+      </div>
+    </nav>
+
+    <button class="cabecalho__hamburguer" type="button"
+            aria-label="Abrir menu" aria-expanded="false" aria-controls="menu-principal" data-menu-abrir>
+      <svg class="icone" aria-hidden="true"><use href="#i-menu"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="menu-fundo" hidden data-menu-fundo></div>
+
+<main id="conteudo">
+
+  <!-- ============================== HERO ============================== -->
+  <section class="hero" id="topo">
+    <div class="hero__grade">
+
+      <div class="hero__conteudo">
+        <p class="sobretitulo sobretitulo--claro linha-anim" data-anim="1">Mais que contabilidade</p>
+
+        <h1 class="hero__titulo">
+          <span class="mascara"><span class="mascara__texto" data-anim="2">Estratégia</span></span>
+          <span class="mascara"><span class="mascara__texto" data-anim="3">para o seu</span></span>
+          <span class="mascara"><span class="mascara__texto texto-ouro" data-anim="4">crescimento</span></span>
+        </h1>
+
+        <p class="hero__texto linha-anim" data-anim="5">
+          A Facchini cuida da contabilidade da sua empresa com tecnologia,
+          gente de verdade do seu lado e informação que ajuda você a decidir.
+        </p>
+
+        <div class="hero__acoes linha-anim" data-anim="6">
+          <a class="botao botao--ouro botao--grande" href="#contato">
+            Falar com especialista
+            <svg class="icone" aria-hidden="true"><use href="#i-seta"/></svg>
+          </a>
+          <a class="link-sublinhado" href="#solucoes">
+            Ver o que fazemos
+            <svg class="icone" aria-hidden="true"><use href="#i-seta-baixo"/></svg>
+          </a>
+        </div>
+
+        <ul class="hero__selos linha-anim" data-anim="7">
+          <li class="selo">
+            <span class="selo__icone"><svg class="icone" aria-hidden="true"><use href="#i-consultivo"/></svg></span>
+            <span>Atendimento<br>consultivo</span>
+          </li>
+          <li class="selo">
+            <span class="selo__icone"><svg class="icone" aria-hidden="true"><use href="#i-tecnologia"/></svg></span>
+            <span>Tecnologia<br>que aproxima</span>
+          </li>
+          <li class="selo">
+            <span class="selo__icone"><svg class="icone" aria-hidden="true"><use href="#i-seguranca"/></svg></span>
+            <span>Segurança<br>em cada etapa</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="hero__midia">
+        <div class="hero__moldura">
+          <img class="hero__foto"
+               src="assets/images/hero-recepcao.webp"
+               srcset="assets/images/hero-recepcao-860.webp 860w,
+                       assets/images/hero-recepcao-1280.webp 1280w,
+                       assets/images/hero-recepcao.webp 1672w"
+               sizes="(max-width: 980px) 100vw, 55vw"
+               width="1672" height="941" fetchpriority="high" decoding="async"
+               alt="Recepção do escritório da Facchini Assessoria Contábil, com a marca iluminada na parede de pedra">
+        </div>
+        <div class="hero__sobreposicao" aria-hidden="true"></div>
+
+        <p class="hero__frase">
+          <span>Empresas</span><span>fortes</span><span>constroem</span><span>grandes</span><span>histórias</span>
+        </p>
+
+        <p class="hero__local">
+          Campinas/SP
+          <span class="hero__desde">Desde 2009</span>
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ====================== NÚMEROS (motivo do logo) ====================== -->
+  <section class="numeros" id="numeros" aria-labelledby="titulo-numeros">
+    <div class="container numeros__grade">
+
+      <div class="numeros__intro" data-revelar>
+        <p class="sobretitulo">A Facchini em números</p>
+        <!-- Sem número no título de propósito: o dado exato mora no card ao
+             lado e as duas coisas não podem se contradizer com o passar do ano. -->
+        <h2 class="titulo-secao" id="titulo-numeros">
+          Quase duas décadas<br>construindo <span class="texto-ouro">confiança.</span>
+        </h2>
+      </div>
+
+      <ul class="numeros__lista">
+        <li class="numero" data-revelar>
+          <span class="numero__barras" aria-hidden="true">
+            <i data-altura="42"></i><i data-altura="68"></i><i data-altura="100"></i>
+          </span>
+          <p class="numero__valor"><span data-contador="16" data-prefixo="+">+16</span> anos</p>
+          <p class="numero__rotulo">de experiência no mercado</p>
+        </li>
+        <li class="numero" data-revelar>
+          <span class="numero__barras" aria-hidden="true">
+            <i data-altura="55"></i><i data-altura="80"></i><i data-altura="100"></i>
+          </span>
+          <p class="numero__valor"><span data-contador="1000" data-prefixo="+">+1.000</span></p>
+          <p class="numero__rotulo">empresas atendidas</p>
+        </li>
+        <li class="numero" data-revelar>
+          <span class="numero__barras" aria-hidden="true">
+            <i data-altura="70"></i><i data-altura="45"></i><i data-altura="100"></i>
+          </span>
+          <p class="numero__valor"><span data-contador="7" data-prefixo="">7</span> segmentos</p>
+          <p class="numero__rotulo">com especialistas dedicados</p>
+        </li>
+        <li class="numero" data-revelar>
+          <span class="numero__barras" aria-hidden="true">
+            <i data-altura="100"></i><i data-altura="62"></i><i data-altura="88"></i>
+          </span>
+          <p class="numero__valor">1 contador</p>
+          <p class="numero__rotulo">responsável pela sua conta</p>
+        </li>
+      </ul>
+
+    </div>
+  </section>
+
+  <!-- ==================== SOLUÇÕES — BENTO GRID ==================== -->
+  <section class="solucoes secao" id="solucoes" aria-labelledby="titulo-solucoes">
+    <div class="container">
+
+      <div class="solucoes__cabecalho" data-revelar>
+        <div>
+          <p class="sobretitulo">Soluções completas</p>
+          <h2 class="titulo-secao" id="titulo-solucoes">
+            Tudo o que a sua empresa precisa,
+            <span class="texto-ouro">em um só lugar.</span>
+          </h2>
+        </div>
+        <p class="texto-apoio">
+          Contabilidade, fiscal, folha e financeiro sob o mesmo teto.
+          Uma equipe só, que conhece a sua empresa inteira.
+        </p>
+      </div>
+
+      <ul class="bento">
+        <li class="bento__item bento__item--destaque" data-revelar>
+          <span class="bento__icone"><svg class="icone" aria-hidden="true"><use href="#i-contabil"/></svg></span>
+          <h3 class="bento__titulo">Contábil</h3>
+          <p class="bento__texto">
+            Balanços e demonstrativos em dia, explicados de um jeito que
+            você entende — para decidir com número, não com achismo.
+          </p>
+          <span class="bento__marca" aria-hidden="true">
+            <i></i><i></i><i></i><i></i>
+          </span>
+        </li>
+
+        <li class="bento__item" data-revelar>
+          <span class="bento__icone"><svg class="icone" aria-hidden="true"><use href="#i-fiscal"/></svg></span>
+          <h3 class="bento__titulo">Fiscal</h3>
+          <p class="bento__texto">Impostos apurados no prazo, sem susto.</p>
+        </li>
+
+        <li class="bento__item" data-revelar>
+          <span class="bento__icone"><svg class="icone" aria-hidden="true"><use href="#i-pessoal"/></svg></span>
+          <h3 class="bento__titulo">Departamento Pessoal</h3>
+          <p class="bento__texto">Folha, férias e admissões sem dor de cabeça.</p>
+        </li>
+
+        <li class="bento__item bento__item--largo" data-revelar>
+          <span class="bento__icone"><svg class="icone" aria-hidden="true"><use href="#i-bpo"/></svg></span>
+          <h3 class="bento__titulo">BPO Financeiro</h3>
+          <p class="bento__texto">
+            A gente cuida das contas a pagar e a receber. Você olha para o
+            caixa uma vez por semana e sabe exatamente onde está.
+          </p>
+        </li>
+
+        <li class="bento__item" data-revelar>
+          <span class="bento__icone"><svg class="icone" aria-hidden="true"><use href="#i-abertura"/></svg></span>
+          <h3 class="bento__titulo">Abertura de Empresas</h3>
+          <p class="bento__texto">Do CNPJ à primeira nota fiscal.</p>
+        </li>
+
+        <li class="bento__item" data-revelar>
+          <span class="bento__icone"><svg class="icone" aria-hidden="true"><use href="#i-consultoria"/></svg></span>
+          <h3 class="bento__titulo">Consultoria Empresarial</h3>
+          <p class="bento__texto">Qual regime tributário pesa menos no seu bolso.</p>
+        </li>
+
+        <li class="bento__item bento__item--largo" data-revelar>
+          <span class="bento__icone"><svg class="icone" aria-hidden="true"><use href="#i-certificado"/></svg></span>
+          <h3 class="bento__titulo">Certificado Digital</h3>
+          <p class="bento__texto">Emissão e renovação sem você sair do lugar.</p>
+        </li>
+      </ul>
+
+    </div>
+  </section>
+
+  <!-- ================ TECNOLOGIA — ABAS HORIZONTAIS ================ -->
+  <!-- Cabe em uma tela: quem quiser explorar clica nas abas, quem não
+       quiser rola direto. Sem JS, os cinco recursos aparecem em lista. -->
+  <section class="tecnologia" aria-labelledby="titulo-tecnologia">
+    <div class="container">
+
+      <div class="tecnologia__topo" data-revelar>
+        <div>
+          <p class="sobretitulo sobretitulo--claro">Tecnologia que aproxima</p>
+          <h2 class="tecnologia__titulo" id="titulo-tecnologia">
+            O seu escritório<br>cabe no seu <span class="texto-ouro">bolso.</span>
+          </h2>
+        </div>
+        <p class="tecnologia__descricao">
+          Nosso aplicativo conecta a sua empresa ao escritório. Documento,
+          imposto e conversa — tudo no mesmo lugar, a qualquer hora.
+        </p>
+      </div>
+
+      <div class="recursos" data-abas>
+        <div class="recursos__abas" role="tablist" aria-label="Recursos do aplicativo">
+          <button class="aba" type="button" role="tab" id="aba-1" aria-controls="painel-1">
+            <span class="aba__numero">01</span>
+            <span class="aba__nome">Documentos</span>
+          </button>
+          <button class="aba" type="button" role="tab" id="aba-2" aria-controls="painel-2">
+            <span class="aba__numero">02</span>
+            <span class="aba__nome">Obrigações</span>
+          </button>
+          <button class="aba" type="button" role="tab" id="aba-3" aria-controls="painel-3">
+            <span class="aba__numero">03</span>
+            <span class="aba__nome">Solicitações</span>
+          </button>
+          <button class="aba" type="button" role="tab" id="aba-4" aria-controls="painel-4">
+            <span class="aba__numero">04</span>
+            <span class="aba__nome">Financeiro</span>
+          </button>
+          <button class="aba" type="button" role="tab" id="aba-5" aria-controls="painel-5">
+            <span class="aba__numero">05</span>
+            <span class="aba__nome">Atendimento</span>
+          </button>
+        </div>
+
+        <div class="recursos__corpo">
+          <div class="recursos__paineis">
+            <div class="painel" role="tabpanel" id="painel-1" aria-labelledby="aba-1">
+              <h3 class="painel__titulo">Documentos em nuvem</h3>
+              <p class="painel__texto">
+                Envie uma nota pelo celular e ela chega organizada no escritório.
+                Nada de pasta, e-mail perdido ou papel na gaveta.
+              </p>
+            </div>
+            <div class="painel" role="tabpanel" id="painel-2" aria-labelledby="aba-2">
+              <h3 class="painel__titulo">Calendário de obrigações</h3>
+              <p class="painel__texto">
+                Você vê o que vence e quando, antes de virar multa.
+                Cada imposto com data, valor e situação.
+              </p>
+            </div>
+            <div class="painel" role="tabpanel" id="painel-3" aria-labelledby="aba-3">
+              <h3 class="painel__titulo">Solicitações online</h3>
+              <p class="painel__texto">
+                Pediu uma certidão ou uma admissão? Abra a solicitação
+                pelo app e acompanhe o andamento até o fim.
+              </p>
+            </div>
+            <div class="painel" role="tabpanel" id="painel-4" aria-labelledby="aba-4">
+              <h3 class="painel__titulo">Visão financeira</h3>
+              <p class="painel__texto">
+                Receita, despesa e lucro do mês num painel só, comparados
+                com o mês anterior. Dá para olhar em trinta segundos.
+              </p>
+            </div>
+            <div class="painel" role="tabpanel" id="painel-5" aria-labelledby="aba-5">
+              <h3 class="painel__titulo">Atendimento direto</h3>
+              <p class="painel__texto">
+                Fale com quem cuida da sua conta, sem passar por robô
+                e sem recomeçar a conversa do zero.
+              </p>
+            </div>
+          </div>
+
+          <div class="recursos__midia">
+            <img class="recursos__painel-img"
+                 src="assets/images/dashboard-financeiro.webp"
+                 srcset="assets/images/dashboard-financeiro-760.webp 760w,
+                         assets/images/dashboard-financeiro.webp 1200w"
+                 sizes="(max-width: 980px) 90vw, 46vw"
+                 width="1448" height="1086" loading="lazy" decoding="async"
+                 alt="Painel financeiro da Facchini mostrando receitas, despesas, lucro líquido e obrigações do mês">
+            <img class="recursos__celular"
+                 src="assets/images/app-mockup.webp"
+                 srcset="assets/images/app-mockup-520.webp 520w,
+                         assets/images/app-mockup.webp 820w"
+                 sizes="(max-width: 980px) 40vw, 18vw"
+                 width="1086" height="1448" loading="lazy" decoding="async"
+                 alt="Aplicativo da Facchini no celular, com documentos, solicitações e calendário de obrigações">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =================== SEGMENTOS — MARQUEE INFINITO =================== -->
+  <section class="segmentos" id="segmentos" aria-labelledby="titulo-segmentos">
+    <div class="container segmentos__cabecalho" data-revelar>
+      <div>
+        <p class="sobretitulo">Segmentos que atendemos</p>
+        <h2 class="titulo-secao" id="titulo-segmentos">
+          Já conhecemos<br>as regras do <span class="texto-ouro">seu setor.</span>
+        </h2>
+      </div>
+      <p class="texto-apoio">
+        Cada ramo tem sua própria armadilha fiscal. Trabalhamos com estes
+        todos os dias, então você não paga para a gente aprender.
+      </p>
+    </div>
+
+    <!-- A faixa desliza sozinha; a lista é duplicada para o laço não ter emenda.
+         A cópia é escondida de leitores de tela para não repetir o conteúdo. -->
+    <div class="faixa" data-faixa>
+      <ul class="faixa__trilho">
+        <li class="segmento">
+          <img src="assets/images/segmento-industria.webp"
+               srcset="assets/images/segmento-industria-420.webp 420w, assets/images/segmento-industria.webp 760w"
+               sizes="18rem" width="1448" height="1086" loading="lazy" decoding="async"
+               alt="Interior de uma indústria com linha de produção">
+          <span class="segmento__nome">Indústria</span>
+        </li>
+        <li class="segmento">
+          <img src="assets/images/segmento-farmacia.webp"
+               srcset="assets/images/segmento-farmacia-420.webp 420w, assets/images/segmento-farmacia.webp 760w"
+               sizes="18rem" width="1448" height="1086" loading="lazy" decoding="async"
+               alt="Medicamentos em prateleira de farmácia">
+          <span class="segmento__nome">Farmácia</span>
+        </li>
+        <li class="segmento">
+          <img src="assets/images/segmento-comercio.webp"
+               srcset="assets/images/segmento-comercio-420.webp 420w, assets/images/segmento-comercio.webp 760w"
+               sizes="18rem" width="1448" height="1086" loading="lazy" decoding="async"
+               alt="Movimento de clientes em uma loja de comércio">
+          <span class="segmento__nome">Comércio</span>
+        </li>
+        <li class="segmento">
+          <img src="assets/images/segmento-comercio.webp"
+               srcset="assets/images/segmento-comercio-420.webp 420w, assets/images/segmento-comercio.webp 760w"
+               sizes="18rem" width="1448" height="1086" loading="lazy" decoding="async"
+               alt="Caixas preparadas para envio de pedidos de e-commerce">
+          <span class="segmento__nome">E-commerce</span>
+        </li>
+        <li class="segmento">
+          <img src="assets/images/segmento-construcao.webp"
+               srcset="assets/images/segmento-construcao-420.webp 420w, assets/images/segmento-construcao.webp 760w"
+               sizes="18rem" width="1448" height="1086" loading="lazy" decoding="async"
+               alt="Obra de construção civil com edifício em estrutura">
+          <span class="segmento__nome">Construção Civil</span>
+        </li>
+        <li class="segmento">
+          <img src="assets/images/segmento-supermercados.webp"
+               srcset="assets/images/segmento-supermercados-420.webp 420w, assets/images/segmento-supermercados.webp 760w"
+               sizes="18rem" width="1448" height="1086" loading="lazy" decoding="async"
+               alt="Corredor de supermercado com prateleiras abastecidas">
+          <span class="segmento__nome">Supermercados</span>
+        </li>
+        <li class="segmento">
+          <img src="assets/images/segmento-transportadoras.webp"
+               srcset="assets/images/segmento-transportadoras-420.webp 420w, assets/images/segmento-transportadoras.webp 760w"
+               sizes="18rem" width="1448" height="1086" loading="lazy" decoding="async"
+               alt="Caminhão de transportadora em centro de distribuição">
+          <span class="segmento__nome">Transportadoras</span>
+        </li>
+      </ul>
+      <ul class="faixa__trilho" aria-hidden="true" data-faixa-copia></ul>
+    </div>
+  </section>
+
+  <!-- ===================== OBJEÇÕES / DÚVIDAS ===================== -->
+  <!-- ATENÇÃO: as respostas abaixo são um rascunho e contêm promessas
+       comerciais (prazo, custo, abrangência). Precisam ser conferidas e
+       ajustadas pela Facchini antes de publicar. Ver docs/DEPLOY.md -->
+  <section class="duvidas secao" id="duvidas" aria-labelledby="titulo-duvidas">
+    <div class="container duvidas__grade">
+
+      <div class="duvidas__intro" data-revelar>
+        <p class="sobretitulo">Antes de você perguntar</p>
+        <h2 class="titulo-secao" id="titulo-duvidas">
+          As dúvidas que<br>todo mundo tem.
+        </h2>
+        <p class="texto-apoio">
+          Se a sua não estiver aqui, mande pelo formulário.
+          A gente responde do mesmo jeito: direto.
+        </p>
+      </div>
+
+      <div class="duvidas__lista" data-revelar>
+        <details class="duvida" name="duvidas">
+          <summary>
+            Já tenho contador. Trocar dá muito trabalho?
+            <span class="duvida__sinal" aria-hidden="true"><svg class="icone"><use href="#i-mais"/></svg></span>
+          </summary>
+          <p>
+            A transição é por nossa conta. Você assina uma procuração, nós pedimos
+            os documentos ao escritório atual e organizamos tudo. Sua empresa não para.
+          </p>
+        </details>
+
+        <details class="duvida" name="duvidas">
+          <summary>
+            Quanto custa?
+            <span class="duvida__sinal" aria-hidden="true"><svg class="icone"><use href="#i-mais"/></svg></span>
+          </summary>
+          <p>
+            Depende do porte da empresa, do regime tributário e do número de
+            funcionários. Conversamos, entendemos o seu caso e enviamos uma
+            proposta fechada — sem taxa escondida na fatura.
+          </p>
+        </details>
+
+        <details class="duvida" name="duvidas">
+          <summary>
+            Vocês atendem fora de Campinas?
+            <span class="duvida__sinal" aria-hidden="true"><svg class="icone"><use href="#i-mais"/></svg></span>
+          </summary>
+          <p>
+            Sim. O dia a dia acontece pelo aplicativo, então a distância não muda
+            nada no atendimento. Atendemos empresas em todo o Brasil.
+          </p>
+        </details>
+
+        <details class="duvida" name="duvidas">
+          <summary>
+            Vou falar com um robô ou com uma pessoa?
+            <span class="duvida__sinal" aria-hidden="true"><svg class="icone"><use href="#i-mais"/></svg></span>
+          </summary>
+          <p>
+            Com uma pessoa. Sua empresa tem um contador responsável, com nome e
+            telefone. Você não recomeça a conversa do zero a cada contato.
+          </p>
+        </details>
+
+        <details class="duvida" name="duvidas">
+          <summary>
+            Meus dados ficam seguros?
+            <span class="duvida__sinal" aria-hidden="true"><svg class="icone"><use href="#i-mais"/></svg></span>
+          </summary>
+          <p>
+            Os documentos ficam em nuvem com acesso controlado, e tratamos seus
+            dados conforme a LGPD. Você decide quem da sua equipe enxerga o quê.
+          </p>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ====================== CHAMADA FINAL + FORMULÁRIO ====================== -->
+  <section class="chamada" id="contato" aria-labelledby="titulo-chamada">
+    <img class="chamada__fundo"
+         src="assets/images/cta-predios.webp"
+         srcset="assets/images/cta-predios-1280.webp 1280w, assets/images/cta-predios.webp 1672w"
+         sizes="100vw" width="1672" height="941" loading="lazy" decoding="async" alt="">
+    <div class="chamada__vinheta" aria-hidden="true"></div>
+
+    <div class="container chamada__grade">
+
+      <div class="chamada__texto" data-revelar>
+        <p class="sobretitulo sobretitulo--claro">Vamos conversar?</p>
+        <h2 class="chamada__titulo" id="titulo-chamada">
+          Sua empresa pode mais.<br>
+          E nós estamos prontos<br>para caminhar com você.
+        </h2>
+        <p class="chamada__descricao">
+          Preencha ao lado e um especialista entra em contato.
+          Sem compromisso e sem discurso de vendas.
+        </p>
+
+        <ul class="chamada__beneficios">
+          <li>
+            <span class="selo__icone"><svg class="icone" aria-hidden="true"><use href="#i-humanizado"/></svg></span>
+            Atendimento humanizado
+          </li>
+          <li>
+            <span class="selo__icone"><svg class="icone" aria-hidden="true"><use href="#i-rapido"/></svg></span>
+            Resposta em 1 dia útil
+          </li>
+          <li>
+            <span class="selo__icone"><svg class="icone" aria-hidden="true"><use href="#i-personalizado"/></svg></span>
+            Proposta sob medida
+          </li>
+        </ul>
+
+        <div class="fundador">
+          <img class="fundador__foto"
+               src="assets/images/fundador.webp"
+               srcset="assets/images/fundador-300.webp 300w, assets/images/fundador.webp 600w"
+               sizes="88px" width="600" height="750" loading="lazy" decoding="async"
+               alt="Foto do fundador da Facchini Assessoria Contábil">
+          <p class="fundador__texto">
+            <span class="fundador__linha">"Fale direto comigo."</span>
+            <span class="fundador__nome">Henrique Facchini</span>
+            <span class="fundador__cargo">Fundador · Facchini Assessoria Contábil</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="formulario-caixa" data-revelar>
+        <h3 class="formulario__titulo">Falar com especialista</h3>
+        <p class="formulario__auxilio">Três campos. Levamos menos de um minuto do seu dia.</p>
+
+        <!-- O envio é tratado por js/main.js. Configure o endpoint em CONFIG.endpointFormulario.
+             Enquanto não houver endpoint, o formulário oferece o WhatsApp como caminho alternativo. -->
+        <form class="formulario" method="post" action="#" novalidate data-formulario>
+
+          <!-- Armadilha anti-robô: invisível para pessoas, preenchida por bots -->
+          <div class="campo-armadilha" aria-hidden="true">
+            <label for="site">Não preencha este campo</label>
+            <input type="text" id="site" name="site" tabindex="-1" autocomplete="off">
+          </div>
+
+          <div class="campo">
+            <label for="nome">Nome <span class="obrigatorio" aria-hidden="true">*</span></label>
+            <input type="text" id="nome" name="nome" required autocomplete="name"
+                   maxlength="80" aria-describedby="erro-nome">
+            <p class="campo__erro" id="erro-nome" data-erro-de="nome"></p>
+          </div>
+
+          <div class="campo">
+            <label for="telefone">WhatsApp <span class="obrigatorio" aria-hidden="true">*</span></label>
+            <input type="tel" id="telefone" name="telefone" required autocomplete="tel"
+                   inputmode="tel" maxlength="16" placeholder="(19) 99999-9999"
+                   aria-describedby="erro-telefone" data-mascara="telefone">
+            <p class="campo__erro" id="erro-telefone" data-erro-de="telefone"></p>
+          </div>
+
+          <div class="campo">
+            <label for="email">E-mail <span class="obrigatorio" aria-hidden="true">*</span></label>
+            <input type="email" id="email" name="email" required autocomplete="email"
+                   maxlength="120" aria-describedby="erro-email">
+            <p class="campo__erro" id="erro-email" data-erro-de="email"></p>
+          </div>
+
+          <!-- Campos opcionais fora do caminho principal: quem quiser detalhar, detalha;
+               quem não quiser, envia com três campos. -->
+          <details class="formulario__extra">
+            <summary>Quer adiantar mais detalhes? (opcional)</summary>
+            <div class="campo">
+              <label for="empresa">Empresa</label>
+              <input type="text" id="empresa" name="empresa" autocomplete="organization" maxlength="80">
+            </div>
+            <div class="campo">
+              <label for="segmento">Segmento</label>
+              <select id="segmento" name="segmento">
+                <option value="">Selecione…</option>
+                <option>Indústria</option>
+                <option>Farmácia</option>
+                <option>Comércio</option>
+                <option>E-commerce</option>
+                <option>Construção Civil</option>
+                <option>Supermercados</option>
+                <option>Transportadoras</option>
+                <option>Serviços</option>
+                <option>Ainda vou abrir minha empresa</option>
+                <option>Outro</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label for="mensagem">Como podemos ajudar?</label>
+              <textarea id="mensagem" name="mensagem" rows="3" maxlength="1000"></textarea>
+            </div>
+          </details>
+
+          <div class="campo campo--consentimento">
+            <input type="checkbox" id="consentimento" name="consentimento" required
+                   aria-describedby="erro-consentimento">
+            <label for="consentimento">
+              Autorizo a Facchini a usar meus dados para entrar em contato,
+              conforme a <a href="pages/politica-de-privacidade.html" class="link-simples" target="_blank" rel="noopener">Política de Privacidade</a>.
+              <span class="obrigatorio" aria-hidden="true">*</span>
+            </label>
+            <p class="campo__erro" id="erro-consentimento" data-erro-de="consentimento"></p>
+          </div>
+
+          <button class="botao botao--ouro botao--cheio botao--grande" type="submit" data-enviar>
+            Quero falar com um especialista
+            <svg class="icone" aria-hidden="true"><use href="#i-seta"/></svg>
+          </button>
+
+          <p class="formulario__retorno" role="status" aria-live="polite" data-retorno></p>
+
+          <p class="formulario__alternativa">
+            Prefere falar agora?
+            <a class="link-simples" href="https://wa.me/551933811008"
+               target="_blank" rel="noopener noreferrer">Chamar no WhatsApp</a>
+          </p>
+        </form>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================= RODAPÉ ============================= -->
+<footer class="rodape">
+  <div class="container rodape__grade">
+
+    <div class="rodape__marca">
+      <img src="assets/logo/facchini-logo-branco.webp" width="640" height="133"
+           alt="Facchini Assessoria Contábil" class="rodape__logo" loading="lazy">
+      <p class="rodape__resumo">
+        Mais que contabilidade: estratégia para o seu crescimento.
+        Ao lado de empresas de diversos segmentos desde 2009.
+      </p>
+      <ul class="rodape__sociais">
+        <li>
+          <a href="https://wa.me/551933811008" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+            <svg class="icone" aria-hidden="true"><use href="#i-whatsapp"/></svg>
+          </a>
+        </li>
+        <li>
+          <a href="https://www.instagram.com/facchiniassessoria/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <svg class="icone" aria-hidden="true"><use href="#i-instagram"/></svg>
+          </a>
+        </li>
+        <li>
+          <a href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+            <svg class="icone" aria-hidden="true"><use href="#i-linkedin"/></svg>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <nav class="rodape__coluna" aria-label="Navegação do rodapé">
+      <h2 class="rodape__titulo">Navegação</h2>
+      <ul>
+        <li><a href="#topo">Início</a></li>
+        <li><a href="#numeros">Sobre nós</a></li>
+        <li><a href="#solucoes">Soluções</a></li>
+        <li><a href="#segmentos">Segmentos</a></li>
+        <li><a href="#duvidas">Dúvidas</a></li>
+        <li><a href="#contato">Contato</a></li>
+      </ul>
+    </nav>
+
+    <div class="rodape__coluna">
+      <h2 class="rodape__titulo">Soluções</h2>
+      <ul>
+        <li><a href="#solucoes">Contábil</a></li>
+        <li><a href="#solucoes">Fiscal</a></li>
+        <li><a href="#solucoes">Departamento Pessoal</a></li>
+        <li><a href="#solucoes">BPO Financeiro</a></li>
+        <li><a href="#solucoes">Abertura de Empresas</a></li>
+      </ul>
+    </div>
+
+    <div class="rodape__coluna">
+      <h2 class="rodape__titulo">Contato</h2>
+      <ul class="rodape__contato">
+        <li>
+          <svg class="icone" aria-hidden="true"><use href="#i-local"/></svg>
+          <span>Campinas/SP</span>
+        </li>
+        <li>
+          <svg class="icone" aria-hidden="true"><use href="#i-telefone"/></svg>
+          <a href="tel:+551933811008">(19) 3381-1008</a>
+        </li>
+        <li>
+          <svg class="icone" aria-hidden="true"><use href="#i-email"/></svg>
+          <a href="mailto:contato@facchiniassessoria.com.br">contato@facchiniassessoria.com.br</a>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="container rodape__base">
+    <p>&copy; <span data-ano>2026</span> Facchini Assessoria Contábil. Todos os direitos reservados.</p>
+    <p><a href="pages/politica-de-privacidade.html" class="link-simples">Política de Privacidade</a></p>
+  </div>
+</footer>
+
+<!-- Barra fixa de conversão: aparece depois do hero, some ao chegar no formulário -->
+<div class="barra-cta" hidden data-barra-cta>
+  <p class="barra-cta__texto">Quer uma proposta para a sua empresa?</p>
+  <a class="botao botao--ouro" href="#contato">
+    Falar com especialista
+    <svg class="icone" aria-hidden="true"><use href="#i-seta"/></svg>
+  </a>
+</div>
+
+<script src="js/main.js" defer></script>
+</body>
+</html>

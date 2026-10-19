@@ -1,0 +1,752 @@
+/* =============================================================
+   PORTAL — casca compartilhada (sidebar, topo, cartões, tabela).
+   Toda página do portal carrega este arquivo. Ele não sabe nada
+   sobre o conteúdo de nenhuma página específica — só o esqueleto
+   e os componentes genéricos (.cartao, tabela, etiquetas). Editar
+   uma página do portal não deveria nunca exigir mexer aqui, e
+   mexer aqui não deveria quebrar o conteúdo de nenhuma página.
+   Depende só de base.css (tokens, reset, .botao).
+   ============================================================= */
+
+html, body { height: 100%; overflow: hidden; }
+body { background: var(--osso-fundo); }
+
+.portal {
+  display: grid;
+  grid-template-columns: 16.5rem minmax(0, 1fr);
+  height: 100svh;
+}
+
+.portal__area {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ============================== SIDEBAR ============================== */
+.portal__sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-7);
+  padding: var(--e-6) var(--e-5) var(--e-6);
+  background: var(--navy-950);
+  overflow: hidden;
+}
+
+/* Marca-d'água decorativa: o motivo de barras do logo, bem sutil,
+   ecoando o mesmo elemento gráfico usado no site institucional. */
+.portal__marca-bars {
+  position: absolute;
+  left: var(--e-5);
+  bottom: 6rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+  height: 9rem;
+  opacity: 0.07;
+  pointer-events: none;
+}
+.portal__marca-bars i {
+  width: 1.4rem;
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--ouro-claro), var(--ouro-escuro));
+}
+.portal__marca-bars i:nth-child(1) { height: 45%; }
+.portal__marca-bars i:nth-child(2) { height: 100%; }
+.portal__marca-bars i:nth-child(3) { height: 62%; }
+.portal__marca-bars i:nth-child(4) { height: 78%; }
+
+.portal__logo {
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  width: 9.5rem;
+}
+.portal__logo img { width: 100%; height: auto; }
+
+.portal__nav {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-1);
+}
+
+.portal__nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+  padding: 0.7rem var(--e-3);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--claro-suave);
+  border-radius: var(--raio-sm);
+  transition: background-color var(--transicao), color var(--transicao);
+}
+.portal__nav-item .icone { width: 1.15em; height: 1.15em; flex: none; }
+.portal__nav-item:hover { background: rgb(255 255 255 / 0.06); color: var(--claro); }
+.portal__nav-item.esta-ativo {
+  background: var(--navy-800);
+  color: var(--branco);
+  box-shadow: inset 2px 0 0 var(--ouro);
+}
+
+.portal__sidebar-rodape {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-3);
+}
+.portal__sidebar-rodape p {
+  font-family: var(--fonte-titulo);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--claro-suave);
+}
+
+.portal__linha-ouro {
+  display: block;
+  width: 2.5rem;
+  height: 3px;
+  border-radius: var(--raio-pill);
+  background: var(--ouro);
+}
+
+.portal__fundo-sidebar {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgb(6 18 32 / 0.6);
+}
+
+/* ================================ TOPO ================================ */
+.portal__topo {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--e-4);
+  padding: 0.75rem clamp(1.25rem, 3vw, var(--e-7));
+  background: var(--branco);
+  border-bottom: 1px solid var(--borda);
+}
+
+.portal__abrir-menu {
+  display: none;
+  flex: none;
+  padding: var(--e-2);
+  color: var(--navy-900);
+}
+
+.portal__saudacao { flex: none; }
+.portal__saudacao h1 {
+  font-size: var(--t-lg);
+  font-weight: 700;
+  color: var(--navy-900);
+}
+.portal__saudacao p {
+  margin-top: 0.15rem;
+  font-size: var(--t-xs);
+  color: var(--tinta-suave);
+  max-width: 30ch;
+}
+
+.portal__busca {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+  min-width: 0;
+  padding-inline: var(--e-4);
+  background: var(--osso);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-pill);
+  color: var(--tinta-suave);
+  transition: border-color var(--transicao), box-shadow var(--transicao);
+}
+.portal__busca:focus-within {
+  border-color: var(--ouro);
+  box-shadow: 0 0 0 3px rgb(217 164 65 / 0.2);
+}
+.portal__busca input {
+  flex: 1;
+  min-width: 0;
+  padding-block: 0.5rem;
+  font-size: var(--t-sm);
+  color: var(--tinta);
+  background: transparent;
+  border: none;
+}
+.portal__busca input:focus { outline: none; }
+.portal__busca input::placeholder { color: var(--tinta-suave); }
+
+.portal__sino {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  color: var(--tinta-suave);
+  border-radius: 50%;
+  transition: background-color var(--transicao), color var(--transicao);
+}
+.portal__sino:hover { background: var(--osso); color: var(--navy-900); }
+.portal__sino-ponto {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.55rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--ouro-escuro);
+  border: 1.5px solid var(--branco);
+}
+
+.portal__usuario-caixa { position: relative; flex: none; }
+
+.portal__usuario {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+  padding: var(--e-2) var(--e-3) var(--e-2) var(--e-2);
+  border-radius: var(--raio-pill);
+  transition: background-color var(--transicao);
+}
+.portal__usuario:hover { background: var(--osso); }
+
+.portal__avatar {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  flex: none;
+  font-family: var(--fonte-titulo);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--navy-900);
+  background: var(--ouro);
+  border-radius: 50%;
+}
+
+.portal__usuario-texto {
+  display: none;
+  text-align: left;
+  line-height: 1.3;
+}
+.portal__usuario-texto strong { display: block; font-size: var(--t-sm); color: var(--navy-900); }
+.portal__usuario-texto small { font-size: var(--t-xs); color: var(--tinta-suave); }
+
+.portal__usuario .icone { width: 1em; height: 1em; color: var(--tinta-suave); }
+
+.portal__dropdown {
+  position: absolute;
+  top: calc(100% + var(--e-2));
+  right: 0;
+  z-index: 70;
+  display: grid;
+  gap: 0.15rem;
+  width: 12rem;
+  padding: var(--e-2);
+  background: var(--branco);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-lg);
+}
+/* `display: grid` acima tem a mesma especificidade do `[hidden]` nativo
+   do navegador — sem isto, o dropdown ficaria visível de largada. */
+.portal__dropdown[hidden] { display: none; }
+.portal__dropdown a {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+  padding: var(--e-2) var(--e-3);
+  font-size: var(--t-sm);
+  color: var(--tinta);
+  border-radius: var(--raio-sm);
+}
+.portal__dropdown a:hover { background: var(--osso); }
+.portal__dropdown .icone { width: 1.05em; height: 1.05em; color: var(--tinta-suave); }
+
+/* ============================== CONTEÚDO ============================== */
+.portal__conteudo {
+  /* flex:1 preenche o que sobrar da altura da tela abaixo do topo fixo;
+     min-height:0 é o que permite ele encolher em vez de empurrar o
+     documento inteiro (mesma família do bug do min-width em grid/flex,
+     só que no eixo vertical). overflow-y:auto é a rede de segurança —
+     em telas baixas o conteúdo rola só aqui dentro, nunca a página toda. */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  /* Sem isto, a única coluna implícita do grid usa "auto" e respeita o
+     min-content dos filhos (mesma armadilha do 1fr sem minmax, um nível
+     acima) — um cartão largo o bastante empurra a página inteira. */
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 0.65rem;
+  padding: 0.85rem clamp(0.85rem, 2vw, 1.5rem);
+}
+
+/* ------------------------------- cartão genérico ------------------------------- */
+.cartao {
+  /* Fixo, não em clamp com vw: numa tela larga o vw crescia junto com a
+     janela e ia contra o objetivo de caber tudo sem rolagem. */
+  padding: 1rem 1.1rem;
+  background: var(--branco);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+.cartao__cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--e-3);
+  margin-bottom: var(--e-3);
+}
+.cartao__cabecalho--compacto { align-items: center; margin-bottom: 0.5rem; }
+
+.cartao__titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--e-2);
+  font-size: var(--t-base);
+  font-weight: 700;
+  color: var(--navy-900);
+}
+.cartao__titulo .icone { width: 1.1em; height: 1.1em; color: var(--ouro-escuro); }
+
+.cartao__subtitulo {
+  margin-top: 0.2rem;
+  font-size: var(--t-xs);
+  color: var(--tinta-suave);
+}
+
+.cartao__ver-todas {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex: none;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--ouro-escuro);
+}
+.cartao__ver-todas:hover { color: var(--navy-900); }
+.cartao__ver-todas .icone { width: 0.9em; height: 0.9em; }
+
+/* ------------------------------------ filtro genérico ------------------------------------ */
+/* Agrupa mais de um <select> de filtro lado a lado (painel da equipe:
+   prioridade + status) — páginas com um só filtro não usam isso. */
+.cartao__filtros { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.filtro-status {
+  flex: none;
+  padding: 0.45rem 0.7rem;
+  font-size: var(--t-xs);
+  font-weight: 500;
+  color: var(--tinta);
+  background: var(--branco);
+  border: 1.5px solid var(--borda);
+  border-radius: var(--raio-sm);
+}
+.filtro-status:focus { outline: none; border-color: var(--ouro); }
+
+/* ------------------------------------ tabela ------------------------------------ */
+.tabela-scroll { overflow-x: auto; }
+.tabela-documentos__vazio { padding-block: 0.75rem; font-size: var(--t-xs); color: var(--tinta-suave); }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-xs);
+}
+thead th {
+  padding-block: 0.3rem;
+  text-align: left;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+  border-bottom: 1px solid var(--borda);
+}
+tbody td {
+  padding-block: 0.35rem;
+  border-bottom: 1px solid var(--borda);
+  color: var(--tinta);
+  white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+.doc-tipo {
+  display: inline-grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  margin-right: var(--e-2);
+  border-radius: var(--raio-sm);
+  vertical-align: middle;
+}
+.doc-tipo .icone { width: 1.05em; height: 1.05em; }
+.doc-tipo--pdf { background: rgb(211 71 63 / 0.12); color: #C0392B; }
+.doc-tipo--xls { background: rgb(43 138 88 / 0.12); color: #1E8449; }
+
+.tabela-documentos__acoes {
+  display: flex;
+  gap: var(--e-2);
+  text-align: right;
+}
+.tabela-documentos__acoes button,
+.tabela-documentos__acoes a {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--tinta-suave);
+  border-radius: var(--raio-sm);
+  transition: background-color var(--transicao), color var(--transicao);
+}
+.tabela-documentos__acoes button:hover,
+.tabela-documentos__acoes a:hover { background: var(--osso); color: var(--navy-900); }
+.tabela-documentos__acoes .icone { width: 1.05em; height: 1.05em; }
+
+/* "Marcar como pago" (Financeiro): tem texto, não só ícone — não é o
+   mesmo formato dos outros botões de .tabela-documentos__acoes, por
+   isso sobrescreve largura/altura/grid fixos deles. */
+.botao-pago {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: auto;
+  height: auto;
+  padding: 0.35rem 0.7rem;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--tinta-suave);
+  background: var(--osso);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-pill);
+  white-space: nowrap;
+}
+.botao-pago .icone { width: 0.95em; height: 0.95em; }
+.botao-pago--ativo {
+  color: #1E8449;
+  background: rgb(43 138 88 / 0.12);
+  border-color: transparent;
+}
+/* .tabela-documentos__acoes button:hover (acima) é mais específica que
+   .botao-pago:hover sozinha ((.classe .classe :hover) > (.classe :hover))
+   e "vencia" essas duas regras, fazendo o botão perder a cor verde
+   justamente ao passar o mouse — encontrado testando de verdade.
+   Precisa do prefixo .tabela-documentos__acoes pra empatar em
+   especificidade e então ganhar por vir depois no arquivo. */
+.tabela-documentos__acoes .botao-pago:hover { border-color: var(--ouro); color: var(--navy-900); }
+.tabela-documentos__acoes .botao-pago--ativo:hover {
+  color: #1E8449;
+  background: rgb(43 138 88 / 0.18);
+  border-color: transparent;
+}
+
+/* ------------------------------------ etiquetas ------------------------------------ */
+.etiqueta-prazo {
+  flex: none;
+  padding: 0.25rem 0.6rem;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--tinta-suave);
+  background: var(--osso);
+  border-radius: var(--raio-pill);
+}
+.etiqueta-prazo--breve { color: var(--ouro-escuro); background: rgb(217 164 65 / 0.14); }
+
+.etiqueta-status {
+  flex: none;
+  padding: 0.25rem 0.6rem;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  border-radius: var(--raio-pill);
+}
+.etiqueta-status--andamento { color: #1D6FA5; background: rgb(29 111 165 / 0.12); }
+.etiqueta-status--respondido { color: var(--ouro-escuro); background: rgb(217 164 65 / 0.14); }
+.etiqueta-status--concluido { color: #1E8449; background: rgb(43 138 88 / 0.12); }
+.etiqueta-status--atrasada { color: #B3261E; background: rgb(179 38 30 / 0.12); }
+
+/* -------------------------- aviso flutuante de troca de senha -------------------------- */
+/* Presente em toda página do portal (o servidor só renderiza o bloco
+   quando a conta ainda está na senha provisória — ver deve_trocar_senha
+   em backend/app.py). Flutuante e fechável de propósito: é recomendação,
+   não bloqueio — se o cliente só fechar, o portal continua usável, e o
+   aviso volta a aparecer no próximo login enquanto a senha não mudar. */
+.aviso-senha {
+  position: fixed;
+  right: clamp(0.85rem, 3vw, 1.5rem);
+  bottom: clamp(0.85rem, 3vw, 1.5rem);
+  z-index: 80;
+  width: min(22rem, calc(100vw - 1.7rem));
+}
+
+.aviso-senha__caixa {
+  position: relative;
+  padding: 1.1rem;
+  background: var(--branco);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: 0 12px 32px rgb(11 30 51 / 0.16);
+}
+
+.aviso-senha__fechar {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  color: var(--tinta-suave);
+  border-radius: var(--raio-sm);
+  transition: background-color var(--transicao), color var(--transicao);
+}
+.aviso-senha__fechar:hover { background: var(--osso); color: var(--navy-900); }
+.aviso-senha__fechar .icone { width: 1rem; height: 1rem; }
+
+.aviso-senha__titulo {
+  padding-right: 1.6rem;
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--navy-900);
+}
+
+.aviso-senha__texto {
+  margin-top: 0.3rem;
+  font-size: var(--t-xs);
+  color: var(--tinta-suave);
+}
+
+.aviso-senha__formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-3);
+  margin-top: var(--e-3);
+}
+
+.aviso-senha__retorno {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  color: var(--tinta-suave);
+}
+.aviso-senha__retorno:empty { display: none; }
+.aviso-senha__retorno.esta-erro { color: #B3261E; }
+
+/* Campo de formulário genérico (aviso de troca de senha, Nova solicitação
+   etc.) — mesma aparência do login (css/login.css), copiado aqui porque
+   as páginas do portal não carregam login.css. */
+.campo { display: grid; gap: var(--e-2); }
+.campo label { font-size: var(--t-xs); font-weight: 500; color: var(--navy-900); }
+
+.campo__caixa {
+  display: flex;
+  align-items: center;
+  gap: var(--e-2);
+  padding-inline: var(--e-3);
+  background: var(--branco);
+  border: 1.5px solid var(--borda);
+  border-radius: var(--raio-sm);
+  transition: border-color var(--transicao), box-shadow var(--transicao);
+}
+.campo__caixa--area { align-items: flex-start; }
+.campo__caixa:hover { border-color: var(--navy-600); }
+.campo__caixa:focus-within {
+  border-color: var(--ouro);
+  box-shadow: 0 0 0 3px rgb(217 164 65 / 0.22);
+}
+
+.campo__icone { color: var(--tinta-suave); flex: none; width: 1rem; height: 1rem; }
+
+.campo__caixa input,
+.campo__caixa select,
+.campo__caixa textarea {
+  flex: 1;
+  min-width: 0;
+  padding-block: 0.6rem;
+  font-size: var(--t-xs);
+  font-family: inherit;
+  color: var(--tinta);
+  background: transparent;
+  border: none;
+}
+.campo__caixa textarea { resize: vertical; min-height: 4.5rem; }
+.campo__caixa input:focus,
+.campo__caixa select:focus,
+.campo__caixa textarea:focus { outline: none; }
+.campo__caixa input::placeholder,
+.campo__caixa textarea::placeholder { color: var(--tinta-suave); opacity: 0.75; }
+
+.campo__alternar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: var(--e-1);
+  color: var(--tinta-suave);
+  border-radius: var(--raio-sm);
+  transition: color var(--transicao);
+}
+.campo__alternar:hover { color: var(--navy-900); }
+.campo__alternar .icone { width: 1rem; height: 1rem; }
+
+.campo__erro { font-size: 0.7rem; color: #B3261E; }
+.campo__erro:empty { display: none; }
+
+.campo--invalido .campo__caixa { border-color: #B3261E; }
+
+.formulario-solicitacao {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-4);
+  max-width: 32rem;
+}
+.formulario-solicitacao input[type="file"] { font-size: var(--t-xs); }
+
+/* ------------------------------------ perfil (label/valor) ------------------------------------ */
+.lista-perfil {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--e-4) var(--e-5);
+}
+.lista-perfil > div { display: grid; gap: 0.2rem; }
+.lista-perfil dt { font-size: var(--t-xs); color: var(--tinta-suave); }
+.lista-perfil dd { font-size: var(--t-sm); color: var(--navy-900); font-weight: 500; }
+
+.lista-contatos { display: grid; gap: var(--e-3); }
+.lista-contatos li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.6rem;
+  padding-block: 0.6rem;
+  border-bottom: 1px solid var(--borda);
+  font-size: var(--t-sm);
+}
+.lista-contatos li:last-child { border-bottom: none; }
+.lista-contatos strong { color: var(--navy-900); }
+.lista-contatos span { color: var(--tinta-suave); font-size: var(--t-xs); }
+
+/* ------------------------------------ calendário (vencimentos) ------------------------------------ */
+.calendario__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e-3);
+  margin-bottom: var(--e-3);
+}
+.calendario__nav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1.5px solid var(--borda);
+  border-radius: var(--raio-sm);
+  color: var(--navy-900);
+}
+.calendario__nav a:hover { background: var(--osso); border-color: var(--ouro); }
+.calendario__nav a .icone { width: 1.1em; height: 1.1em; }
+.calendario__mes-nome { font-size: var(--t-base); font-weight: 700; color: var(--navy-900); }
+
+/* min-width evita que as células fiquem espremidas demais no mobile —
+   igual .tabela-documentos, rola por dentro do .tabela-scroll em vez de
+   forçar a página inteira a rolar de lado. */
+.calendario {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(5.5rem, 1fr));
+  min-width: 40rem;
+  gap: 1px;
+  background: var(--borda);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-sm);
+  overflow: hidden;
+}
+.calendario__cabecalho-dia {
+  padding: 0.5rem;
+  background: var(--osso);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--tinta-suave);
+  text-align: center;
+}
+.calendario__dia {
+  min-height: 6rem;
+  padding: 0.4rem;
+  background: var(--branco);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.calendario__dia--vazio { background: var(--osso-fundo); }
+.calendario__dia-numero { font-size: var(--t-xs); font-weight: 600; color: var(--tinta-suave); }
+.calendario__dia--hoje .calendario__dia-numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: var(--ouro);
+  color: var(--navy-950);
+}
+.calendario__item {
+  font-size: 0.68rem;
+  line-height: 1.25;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.3rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.calendario__item--andamento { color: #1D6FA5; background: rgb(29 111 165 / 0.12); }
+.calendario__item--atrasada { color: #B3261E; background: rgb(179 38 30 / 0.12); }
+.calendario__item--concluido { color: #1E8449; background: rgb(43 138 88 / 0.12); }
+
+/* ============================ RESPONSIVO ============================ */
+@media (min-width: 640px) {
+  .portal__usuario-texto { display: block; }
+}
+
+@media (max-width: 980px) {
+  /* minmax(0, 1fr), não só "1fr": uma trilha "1fr" sozinha equivale a
+     minmax(auto, 1fr) — o mínimo "auto" deixa a coluna crescer até o
+     tamanho mínimo do conteúdo (a mesma armadilha do min-width:auto do
+     flexbox). Sem o 0 explícito, a página inteira ganhava scroll
+     horizontal no mobile por causa da tabela e do banner internos. */
+  .portal { grid-template-columns: minmax(0, 1fr); }
+
+  .portal__abrir-menu { display: grid; place-items: center; }
+
+  .portal__sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 65;
+    width: min(17rem, 84vw);
+    transform: translateX(-100%);
+    transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .portal__sidebar.esta-aberta { transform: translateX(0); }
+
+  .portal__fundo-sidebar:not([hidden]) { display: block; }
+
+  .portal__saudacao p { display: none; }
+}
+
+@media (max-width: 760px) {
+  .portal__topo { flex-wrap: wrap; }
+  .portal__saudacao { order: 1; flex: 1 1 auto; }
+  .portal__busca { order: 3; flex: 1 1 100%; }
+  .portal__sino { order: 2; }
+  .portal__usuario-caixa { order: 2; }
+}

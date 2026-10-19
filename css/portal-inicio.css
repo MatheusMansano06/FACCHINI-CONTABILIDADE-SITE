@@ -1,0 +1,281 @@
+/* =============================================================
+   PORTAL — tela de início do cliente.
+   Exclusivo desta página: banner, acesso rápido, novidades e o
+   layout de duas colunas. Nenhuma outra página do portal carrega
+   este arquivo, e ele não redefine nada de portal-shell.css —
+   só soma componentes novos.
+   ============================================================= */
+
+/* ================================ BANNER ================================ */
+.banner {
+  position: relative;
+  overflow: hidden;
+  /* Precisa caber a lista "Pessoas/Estratégia/.../Sempre juntos" inteira
+     na vertical — ela é centralizada por conta própria (position:absolute
+     + top:50%) e, se o banner for baixo demais, corta em cima e embaixo
+     em vez de encolher como o resto do texto encolheria. */
+  min-height: 8.5rem;
+  padding: clamp(0.85rem, 1.8vw, 1.25rem);
+  border-radius: var(--raio);
+  isolation: isolate;
+}
+
+.banner__foto {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 70% 45%;
+}
+
+.banner__vinheta {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(100deg, var(--navy-950) 20%, rgb(11 30 51 / 0.88) 48%, rgb(11 30 51 / 0.35) 80%);
+}
+
+.banner__texto { max-width: 26rem; }
+
+.banner__titulo {
+  margin-top: 0.35rem;
+  font-size: clamp(1.15rem, 1.7vw, 1.4rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--branco);
+}
+.banner__titulo::first-line { font-weight: 500; }
+
+.banner__descricao {
+  margin-top: var(--e-2);
+  font-size: var(--t-xs);
+  color: var(--claro-suave);
+}
+
+.banner__lista {
+  position: absolute;
+  right: clamp(1.5rem, 4vw, 3.5rem);
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  gap: 0.5rem;
+}
+.banner__lista li {
+  position: relative;
+  padding-left: var(--e-5);
+  font-family: var(--fonte-titulo);
+  font-size: var(--t-xs);
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--claro);
+}
+.banner__lista li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 0.9rem;
+  height: 2px;
+  background: var(--ouro);
+}
+
+/* ============================== ACESSO RÁPIDO ============================== */
+.acesso-rapido {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: var(--e-3);
+}
+
+.acesso-rapido a {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+  padding: var(--e-3);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--navy-900);
+  background: var(--osso);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-sm);
+  transition: border-color var(--transicao), background-color var(--transicao);
+}
+.acesso-rapido a:hover { background: var(--branco); border-color: rgb(217 164 65 / 0.5); }
+.acesso-rapido a > .icone:first-child { color: var(--ouro-escuro); flex: none; }
+
+.acesso-rapido__seta {
+  margin-left: auto;
+  width: 0.9em;
+  height: 0.9em;
+  color: var(--tinta-suave);
+}
+
+/* ================================ NOVIDADES ================================ */
+.novidades {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.65rem;
+}
+
+.novidade__midia {
+  position: relative;
+  border-radius: var(--raio-sm);
+  overflow: hidden;
+}
+.novidade__midia img {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  object-fit: cover;
+  /* Um pouco acima do centro: nas três fotos (mãos com gráfico, laptop,
+     aperto de mão) é onde o assunto principal está — no aperto de mão
+     em particular, o centro exato cortaria os rostos. */
+  object-position: 50% 35%;
+}
+
+.etiqueta {
+  position: absolute;
+  left: var(--e-3);
+  top: var(--e-3);
+  padding: 0.2rem 0.6rem;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: var(--raio-sm);
+  color: var(--navy-900);
+}
+.etiqueta--comunicado { background: var(--ouro); }
+.etiqueta--informativo { background: rgb(255 255 255 / 0.92); }
+.etiqueta--institucional { background: rgb(255 255 255 / 0.92); }
+
+.novidade h3 {
+  margin-top: 0.4rem;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--navy-900);
+}
+/* Escondida, não removida do HTML: título + data já dizem o essencial,
+   e cortar esta linha é o que sobra de espaço para a tela caber sem
+   precisar rolar. Continua no DOM para quem lê a página de outra forma
+   (leitor de tela, impressão, indexação). */
+.novidade p { display: none; }
+
+.novidade time {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.68rem;
+  color: var(--tinta-suave);
+}
+
+/* ============================ DUAS COLUNAS ============================ */
+.portal__duas-colunas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 21rem;
+  gap: var(--e-4);
+  align-items: start;
+}
+
+.portal__lateral {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.65rem;
+}
+
+/* --------------------------------- vencimentos --------------------------------- */
+.vencimentos { display: grid; gap: 0.4rem; }
+.vencimentos li {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+}
+
+.vencimentos__data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: none;
+  width: 2.3rem;
+  padding-block: 0.15rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  color: var(--ouro-escuro);
+  background: rgb(217 164 65 / 0.12);
+  border-radius: var(--raio-sm);
+}
+.vencimentos__data strong {
+  font-family: var(--fonte-titulo);
+  font-size: var(--t-sm);
+  color: var(--navy-900);
+}
+
+.vencimentos__texto {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  font-size: 0.7rem;
+  color: var(--tinta-suave);
+}
+.vencimentos__texto strong { font-size: var(--t-xs); font-weight: 600; color: var(--navy-900); }
+
+/* --------------------------------- atendimentos --------------------------------- */
+.atendimentos { display: grid; gap: 0.35rem; }
+.atendimentos li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e-3);
+}
+.atendimentos p { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; line-height: 1.25; }
+.atendimentos strong {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--navy-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.atendimentos span:not([class]) { font-size: 0.68rem; color: var(--tinta-suave); }
+
+/* --------------------------------- ajuda --------------------------------- */
+.ajuda-cta {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+  padding: 0.75rem 0.9rem;
+  background: linear-gradient(140deg, var(--navy-800), var(--navy-950));
+  border-radius: var(--raio);
+  color: var(--claro-suave);
+}
+.ajuda-cta > .icone { flex: none; width: 1.4rem; height: 1.4rem; color: var(--ouro); }
+.ajuda-cta > div { flex: 1; min-width: 0; }
+.ajuda-cta h2 { font-size: var(--t-xs); font-weight: 700; color: var(--branco); }
+.ajuda-cta p { margin-top: 0.1rem; font-size: 0.68rem; }
+.ajuda-cta .botao {
+  flex: none;
+  justify-content: center;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.7rem;
+}
+
+/* ============================== RESPONSIVO ============================== */
+@media (max-width: 980px) {
+  /* minmax(0, 1fr), não "1fr" sozinho — ver o comentário equivalente
+     em portal-shell.css. Sem isso a tabela de documentos força a
+     coluna (e a página inteira) a ficar larga demais no mobile. */
+  .portal__duas-colunas { grid-template-columns: minmax(0, 1fr); }
+  .banner__lista { display: none; }
+}
+
+@media (max-width: 560px) {
+  .banner { min-height: 12rem; }
+  .banner__texto { max-width: 100%; }
+  .acesso-rapido { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

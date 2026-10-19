@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "site-facchini",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["scripts/dev-server.py", "4173"],
+      "port": 4173
+    },
+    {
+      "name": "site-facchini-backend",
+      "runtimeExecutable": "backend/venv/bin/uvicorn",
+      "runtimeArgs": ["app:app", "--reload", "--port", "8000", "--app-dir", "backend"],
+      "port": 8000
+    }
+  ]
+}

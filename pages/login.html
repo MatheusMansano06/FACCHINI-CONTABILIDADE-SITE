@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Página de login: não deve ser indexada nem aparecer em busca -->
+<meta name="robots" content="noindex, nofollow">
+
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               img-src 'self' data:;
+               font-src 'self';
+               style-src 'self';
+               script-src 'self';
+               connect-src 'self';
+               form-action 'self';
+               base-uri 'self';
+               object-src 'none';
+               frame-src 'none';
+               upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+<title>Acesso do Cliente | Facchini Assessoria Contábil</title>
+<meta name="theme-color" content="#0B1E33">
+
+<link rel="icon" href="../assets/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+
+<link rel="preload" href="../assets/fonts/archivo-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/base.css">
+<!-- CSS exclusivo desta página. Não referencia nem é referenciado por
+     site.css — mexer num não afeta o outro. -->
+<link rel="stylesheet" href="../css/login.css">
+</head>
+
+<body>
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+<!-- Sprite próprio desta página: mesmo padrão do index.html, mas isolado —
+     um ícone alterado aqui não muda (nem depende de) o sprite da lead page. -->
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-usuario" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/>
+  </symbol>
+  <symbol id="i-cadeado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="15.3" r="1.3"/>
+  </symbol>
+  <symbol id="i-olho" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+  </symbol>
+  <symbol id="i-olho-fechado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 3l18 18"/>
+    <path d="M10.6 5.2A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a18 18 0 0 1-3.2 4.2M6.5 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7c1.4 0 2.7-.3 3.9-.7"/>
+    <path d="M9.5 10a3 3 0 0 0 4.2 4.2"/>
+  </symbol>
+  <symbol id="i-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 12h15m-5.5-5.5L19 12l-5.5 5.5"/>
+  </symbol>
+</svg>
+
+<main class="acesso" id="conteudo">
+  <div class="acesso__grade">
+
+    <!-- ===================== PAINEL DO FORMULÁRIO ===================== -->
+    <section class="acesso__painel-formulario" aria-label="Acesso do cliente">
+      <div class="acesso__conteudo">
+
+        <a class="acesso__marca" href="https://www.facchiniassessoria.com.br/" aria-label="Facchini Assessoria Contábil — ir para o site">
+          <img class="acesso__logo" src="../assets/logo/facchini-logo.webp"
+               width="640" height="133" alt="Facchini Assessoria Contábil">
+        </a>
+
+        <div class="acesso__cabecalho">
+          <span class="acesso__linha-ouro" aria-hidden="true"></span>
+          <h1 class="acesso__titulo"><strong>Acesso</strong> do cliente</h1>
+          <p class="acesso__subtitulo">Sua empresa, nossas soluções, sempre conectadas.</p>
+        </div>
+
+        <!-- Contas são criadas pelo administrador (backend/create_user.py),
+             sem autoatendimento — por isso não existe link de "criar conta"
+             aqui. Envio via fetch em js/login.js, action="#" é só o
+             fallback para navegadores sem JavaScript. -->
+        <form class="acesso__formulario" method="post" action="#" novalidate data-formulario-login>
+
+          <div class="campo">
+            <label for="usuario">Usuário</label>
+            <div class="campo__caixa">
+              <svg class="icone campo__icone" aria-hidden="true"><use href="#i-usuario"/></svg>
+              <input type="text" id="usuario" name="usuario" autocomplete="username"
+                     placeholder="Digite seu usuário" required aria-describedby="erro-usuario">
+            </div>
+            <p class="campo__erro" id="erro-usuario" data-erro-de="usuario"></p>
+          </div>
+
+          <div class="campo">
+            <label for="senha">Senha</label>
+            <div class="campo__caixa">
+              <svg class="icone campo__icone" aria-hidden="true"><use href="#i-cadeado"/></svg>
+              <input type="password" id="senha" name="senha" autocomplete="current-password"
+                     placeholder="Digite sua senha" required aria-describedby="erro-senha" data-campo-senha>
+              <button class="campo__alternar" type="button" aria-label="Mostrar senha" aria-pressed="false" data-alternar-senha>
+                <svg class="icone" aria-hidden="true"><use href="#i-olho-fechado"/></svg>
+              </button>
+            </div>
+            <p class="campo__erro" id="erro-senha" data-erro-de="senha"></p>
+          </div>
+
+          <button class="botao botao--ouro botao--cheio botao--grande acesso__entrar" type="submit">
+            Entrar
+            <svg class="icone" aria-hidden="true"><use href="#i-seta"/></svg>
+          </button>
+
+          <p class="acesso__retorno" role="status" aria-live="polite" data-retorno-login></p>
+
+          <a class="acesso__esqueci" href="#">Esqueceu sua senha?</a>
+        </form>
+
+        <div class="acesso__rodape">
+          <span class="acesso__linha-ouro" aria-hidden="true"></span>
+          <p class="acesso__tagline">Contabilidade<br>que impulsiona o seu amanhã</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================= PAINEL DA FOTO ========================= -->
+    <aside class="acesso__painel-foto">
+      <img class="acesso__foto"
+           src="../assets/images/login-painel.webp"
+           srcset="../assets/images/login-painel-560.webp 560w,
+                   ../assets/images/login-painel-860.webp 860w,
+                   ../assets/images/login-painel.webp 1122w"
+           sizes="50vw"
+           width="1122" height="1402" loading="lazy" decoding="async" alt="">
+      <div class="acesso__vinheta" aria-hidden="true"></div>
+
+      <p class="acesso__marca-vertical" aria-hidden="true">Facchini <span>•</span> Desde 2009</p>
+
+      <p class="acesso__rodape-foto" aria-hidden="true">
+        <span class="acesso__linha-ouro"></span>
+        Crescimento<br>com base sólida
+      </p>
+    </aside>
+
+  </div>
+</main>
+
+<!-- Script exclusivo desta página: não toca no DOM da lead page, e
+     js/main.js não é carregado aqui — os dois nunca se cruzam. -->
+<script src="../js/login.js" defer></script>
+</body>
+</html>

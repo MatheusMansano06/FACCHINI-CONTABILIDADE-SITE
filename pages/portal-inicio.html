@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               img-src 'self' data:;
+               font-src 'self';
+               style-src 'self';
+               script-src 'self';
+               connect-src 'self';
+               form-action 'self';
+               base-uri 'self';
+               object-src 'none';
+               frame-src 'none';
+               upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+<title>Início | Portal do Cliente Facchini</title>
+<meta name="theme-color" content="#0B1E33">
+
+<link rel="icon" href="../assets/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+
+<link rel="preload" href="../assets/fonts/archivo-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/base.css">
+
+<!-- Casca do portal (sidebar, topo, cartões, tabela): compartilhada por
+     TODA página do portal que vier depois desta. Editar uma seção nova
+     do portal não deveria nunca exigir mexer aqui. -->
+<link rel="stylesheet" href="../css/portal-shell.css">
+
+<!-- Só o que é exclusivo desta tela (banner, acesso rápido, novidades).
+     Nenhuma outra página do portal carrega este arquivo. -->
+<link rel="stylesheet" href="../css/portal-inicio.css">
+</head>
+
+<body>
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+<!-- Sprite próprio do portal: nada daqui é compartilhado com o sprite do
+     index.html nem do login.html — os três sprites podem mudar sem
+     interferir uns nos outros. -->
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-inicio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/>
+  </symbol>
+  <symbol id="i-documentos" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 17h6"/>
+  </symbol>
+  <symbol id="i-obrigacoes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M8 3v4M16 3v4"/>
+  </symbol>
+  <symbol id="i-calendario" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M8 3v4M16 3v4"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/>
+  </symbol>
+  <symbol id="i-seta-esquerda" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 12H5m5.5-5.5L5 12l5.5 5.5"/>
+  </symbol>
+  <symbol id="i-seta-direita" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 12h15m-5.5-5.5L19 12l-5.5 5.5"/>
+  </symbol>
+  <symbol id="i-obrigacoes-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M8 3v4M16 3v4"/><path d="m9 14.2 2 2 4-4.2"/>
+  </symbol>
+  <symbol id="i-comunicados" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10v4h3l6 4V6L6 10H3Z"/><path d="M17 9a4 4 0 0 1 0 6"/>
+  </symbol>
+  <symbol id="i-solicitacoes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/>
+  </symbol>
+  <symbol id="i-solicitacoes-mais" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M12 8.2v5.1M9.4 10.75h5.2"/>
+  </symbol>
+  <symbol id="i-financeiro" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 20V10M9.3 20V5M14.7 20v-8M20 20V8"/>
+  </symbol>
+  <symbol id="i-atendimentos" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 13v-1a8 8 0 0 1 16 0v1"/><rect x="3" y="13" width="4.2" height="6" rx="1.4"/><rect x="16.8" y="13" width="4.2" height="6" rx="1.4"/><path d="M19 19v.5a3 3 0 0 1-3 3h-1.8"/>
+  </symbol>
+  <symbol id="i-perfil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/>
+  </symbol>
+  <symbol id="i-busca" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
+  </symbol>
+  <symbol id="i-sino" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.2 9a5.8 5.8 0 0 1 11.6 0c0 3.8 1.4 5.2 1.4 5.2H4.8S6.2 12.8 6.2 9Z"/><path d="M10.2 17.8a1.8 1.8 0 0 0 3.6 0"/>
+  </symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m7 10 5 5 5-5"/>
+  </symbol>
+  <symbol id="i-chevron-dir" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m9 6 6 6-6 6"/>
+  </symbol>
+  <symbol id="i-enviar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 15.5V4M7.5 8.5 12 4l4.5 4.5"/><path d="M4 15.5v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
+  </symbol>
+  <symbol id="i-baixar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3v12.5M7.5 11l4.5 4.5L16.5 11"/><path d="M4 20h16"/>
+  </symbol>
+  <symbol id="i-mais-opcoes" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/>
+  </symbol>
+  <symbol id="i-arquivo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4"/>
+  </symbol>
+  <symbol id="i-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 12h15m-5.5-5.5L19 12l-5.5 5.5"/>
+  </symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <path d="M4 7h16M4 12h16M4 17h16"/>
+  </symbol>
+  <symbol id="i-fechar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <path d="M6 6l12 12M18 6 6 18"/>
+  </symbol>
+  <symbol id="i-cadeado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="15.3" r="1.3"/>
+  </symbol>
+  <symbol id="i-olho" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+  </symbol>
+  <symbol id="i-olho-fechado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 3l18 18"/>
+    <path d="M10.6 5.2A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a18 18 0 0 1-3.2 4.2M6.5 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7c1.4 0 2.7-.3 3.9-.7"/>
+    <path d="M9.5 10a3 3 0 0 0 4.2 4.2"/>
+  </symbol>
+  <symbol id="i-trocar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 7h13l-3-3M4 7l3 3"/><path d="M20 17H7l3 3M20 17l-3-3"/>
+  </symbol>
+</svg>
+
+<div class="portal">
+
+  <!-- ==================== AVISO FLUTUANTE: TROCAR SENHA ==================== -->
+  <!-- Só existe no HTML quando a conta ainda está na senha provisória (ver
+       deve_trocar_senha em backend/app.py) — presente em toda página do
+       portal, comportamento em js/portal.js (iniciarAvisoSenha). Fechar
+       sem trocar não desliga isso: volta a aparecer no próximo login. -->
+  {% if deve_trocar_senha %}
+  <div class="aviso-senha" role="region" aria-label="Troca de senha recomendada" data-aviso-senha>
+    <div class="aviso-senha__caixa">
+      <button class="aviso-senha__fechar" type="button" aria-label="Fechar aviso" data-fechar-aviso-senha>
+        <svg class="icone" aria-hidden="true"><use href="#i-fechar"/></svg>
+      </button>
+
+      <p class="aviso-senha__titulo">Troque sua senha</p>
+      <p class="aviso-senha__texto">Você ainda está com a senha provisória do escritório. Recomendamos trocar por uma só sua.</p>
+
+      <form class="aviso-senha__formulario" method="post" action="#" novalidate data-formulario-troca-senha>
+        <div class="campo">
+          <label for="aviso-nova-senha">Nova senha</label>
+          <div class="campo__caixa">
+            <svg class="icone campo__icone" aria-hidden="true"><use href="#i-cadeado"/></svg>
+            <input type="password" id="aviso-nova-senha" name="novaSenha" autocomplete="new-password"
+                   placeholder="Pelo menos 8 caracteres" required data-campo-senha>
+            <button class="campo__alternar" type="button" aria-label="Mostrar senha" aria-pressed="false" data-alternar-senha>
+              <svg class="icone" aria-hidden="true"><use href="#i-olho-fechado"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="campo">
+          <label for="aviso-confirmacao">Confirme a nova senha</label>
+          <div class="campo__caixa">
+            <svg class="icone campo__icone" aria-hidden="true"><use href="#i-cadeado"/></svg>
+            <input type="password" id="aviso-confirmacao" name="confirmacao" autocomplete="new-password"
+                   placeholder="Digite de novo" required>
+          </div>
+        </div>
+
+        <button class="botao botao--ouro botao--cheio" type="submit">Salvar nova senha</button>
+        <p class="aviso-senha__retorno" role="status" aria-live="polite" data-retorno-troca-senha></p>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ============================ SIDEBAR ============================ -->
+  <!-- Reaparece igual em toda página do portal. Documentos já tem página
+       própria; os demais itens (Obrigações, Comunicados...) ainda não —
+       TODO: trocar href="#" conforme cada um for construído. -->
+  <aside class="portal__sidebar" id="sidebar" data-sidebar>
+    <div class="portal__marca-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+    <a class="portal__logo" href="https://www.facchiniassessoria.com.br/" aria-label="Facchini Assessoria Contábil — ir para o site">
+      <img src="../assets/logo/facchini-logo-branco.webp" width="640" height="133" alt="Facchini Assessoria Contábil">
+    </a>
+
+    <nav class="portal__nav" aria-label="Navegação do portal">
+      <a class="portal__nav-item esta-ativo" href="portal-inicio.html" aria-current="page">
+        <svg class="icone" aria-hidden="true"><use href="#i-inicio"/></svg> Início
+      </a>
+      <a class="portal__nav-item" href="portal-calendario.html">
+        <svg class="icone" aria-hidden="true"><use href="#i-calendario"/></svg> Calendário
+      </a>
+      <a class="portal__nav-item" href="portal-documentos.html">
+        <svg class="icone" aria-hidden="true"><use href="#i-documentos"/></svg> Documentos
+      </a>
+      <a class="portal__nav-item" href="portal-obrigacoes.html">
+        <svg class="icone" aria-hidden="true"><use href="#i-obrigacoes"/></svg> Obrigações
+      </a>
+      <a class="portal__nav-item" href="#">
+        <svg class="icone" aria-hidden="true"><use href="#i-comunicados"/></svg> Comunicados
+      </a>
+      <a class="portal__nav-item" href="portal-solicitacoes.html">
+        <svg class="icone" aria-hidden="true"><use href="#i-solicitacoes"/></svg> Solicitações
+      </a>
+      <a class="portal__nav-item" href="portal-financeiro.html">
+        <svg class="icone" aria-hidden="true"><use href="#i-financeiro"/></svg> Financeiro
+      </a>
+      <a class="portal__nav-item" href="#">
+        <svg class="icone" aria-hidden="true"><use href="#i-atendimentos"/></svg> Atendimentos
+      </a>
+      <a class="portal__nav-item" href="portal-perfil.html">
+        <svg class="icone" aria-hidden="true"><use href="#i-perfil"/></svg> Perfil
+      </a>
+    </nav>
+
+    <div class="portal__sidebar-rodape">
+      <span class="portal__linha-ouro" aria-hidden="true"></span>
+      <p>Contabilidade<br>que impulsiona o seu amanhã</p>
+    </div>
+  </aside>
+
+  <div class="portal__fundo-sidebar" hidden data-fundo-sidebar></div>
+
+  <!-- ============================= ÁREA PRINCIPAL ============================= -->
+  <div class="portal__area">
+
+    <header class="portal__topo">
+      <button class="portal__abrir-menu" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar" data-abrir-sidebar>
+        <svg class="icone" aria-hidden="true"><use href="#i-menu"/></svg>
+      </button>
+
+      <div class="portal__saudacao">
+        <h1>Olá, {{ nome_usuario }}!</h1>
+        <p>Seja bem-vindo ao seu portal. Aqui você encontra tudo o que precisa, de forma simples e segura.</p>
+      </div>
+
+      <!-- Busca ainda não indexa nada real — só a interface por enquanto -->
+      <form class="portal__busca" role="search" action="#" data-busca-portal>
+        <svg class="icone" aria-hidden="true"><use href="#i-busca"/></svg>
+        <input type="search" placeholder="Buscar documentos, obrigações, comunicados…" aria-label="Buscar no portal">
+      </form>
+
+      <button class="portal__sino" type="button" aria-label="Notificações (1 não lida)">
+        <svg class="icone" aria-hidden="true"><use href="#i-sino"/></svg>
+        <span class="portal__sino-ponto" aria-hidden="true"></span>
+      </button>
+
+      <div class="portal__usuario-caixa">
+        <button class="portal__usuario" type="button" aria-haspopup="true" aria-expanded="false" data-menu-usuario>
+          <span class="portal__avatar" aria-hidden="true">{{ empresa.inicial }}</span>
+          <span class="portal__usuario-texto">
+            <strong>{{ empresa.fantasia }}</strong>
+            <small>CNPJ {{ empresa.cnpj }}</small>
+          </span>
+          <svg class="icone" aria-hidden="true"><use href="#i-chevron"/></svg>
+        </button>
+
+        <div class="portal__dropdown" role="menu" hidden data-dropdown-usuario>
+          <a role="menuitem" href="portal-perfil.html">
+            <svg class="icone" aria-hidden="true"><use href="#i-perfil"/></svg> Meu perfil
+          </a>
+          {% if multiplas_empresas %}
+          <a role="menuitem" href="selecionar-empresa.html">
+            <svg class="icone" aria-hidden="true"><use href="#i-trocar"/></svg> Trocar empresa
+          </a>
+          {% endif %}
+          <!-- Link comum de verdade (não JS): /logout encerra a sessão no
+               servidor e redireciona para o login. Funciona sem JavaScript. -->
+          <a role="menuitem" href="/logout">
+            <svg class="icone" aria-hidden="true"><use href="#i-fechar"/></svg> Sair
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="portal__conteudo" id="conteudo">
+
+      <!-- ============================== BANNER ============================== -->
+      <section class="banner" aria-labelledby="titulo-banner">
+        <img class="banner__foto"
+             src="../assets/images/portal-banner.webp"
+             srcset="../assets/images/portal-banner-700.webp 700w,
+                     ../assets/images/portal-banner-1100.webp 1100w,
+                     ../assets/images/portal-banner.webp 1600w"
+             sizes="(max-width: 900px) 100vw, 75vw"
+             width="1672" height="941" loading="eager" decoding="async" alt="">
+        <div class="banner__vinheta" aria-hidden="true"></div>
+
+        <div class="banner__texto">
+          <p class="sobretitulo sobretitulo--claro">Sempre juntos</p>
+          <h2 class="banner__titulo" id="titulo-banner">
+            Mais que contabilidade,<br>uma parceria para o seu crescimento.
+          </h2>
+          <p class="banner__descricao">Conte com a Facchini em todas as etapas da sua jornada.</p>
+        </div>
+
+        <ul class="banner__lista" aria-hidden="true">
+          <li>Pessoas</li><li>Estratégia</li><li>Resultados</li><li>Sempre juntos</li>
+        </ul>
+      </section>
+
+      <!-- =========================== ACESSO RÁPIDO =========================== -->
+      <section class="cartao" aria-labelledby="titulo-acesso-rapido">
+        <div class="cartao__cabecalho">
+          <div>
+            <h2 class="cartao__titulo" id="titulo-acesso-rapido">
+              <svg class="icone" aria-hidden="true"><use href="#i-comunicados"/></svg>
+              Acesso rápido
+            </h2>
+            <p class="cartao__subtitulo">Suas principais funções, a um clique.</p>
+          </div>
+          <a class="cartao__ver-todas" href="#">Ver todas <svg class="icone" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a>
+        </div>
+
+        <ul class="acesso-rapido">
+          <li><a href="#"><svg class="icone" aria-hidden="true"><use href="#i-enviar"/></svg> Enviar documentos <svg class="icone acesso-rapido__seta" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a></li>
+          <li><a href="portal-obrigacoes.html"><svg class="icone" aria-hidden="true"><use href="#i-obrigacoes-check"/></svg> Consultar obrigações <svg class="icone acesso-rapido__seta" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a></li>
+          <li><a href="portal-solicitacoes.html"><svg class="icone" aria-hidden="true"><use href="#i-solicitacoes-mais"/></svg> Abrir solicitação <svg class="icone acesso-rapido__seta" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a></li>
+          <li><a href="portal-financeiro.html"><svg class="icone" aria-hidden="true"><use href="#i-financeiro"/></svg> Área financeira <svg class="icone acesso-rapido__seta" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a></li>
+          <li><a href="#"><svg class="icone" aria-hidden="true"><use href="#i-atendimentos"/></svg> Falar com a equipe <svg class="icone acesso-rapido__seta" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a></li>
+        </ul>
+      </section>
+
+      <!-- ============================= NOVIDADES ============================= -->
+      <section class="cartao" aria-labelledby="titulo-novidades">
+        <div class="cartao__cabecalho">
+          <div>
+            <h2 class="cartao__titulo" id="titulo-novidades">
+              <svg class="icone" aria-hidden="true"><use href="#i-comunicados"/></svg>
+              Novidades da contabilidade
+            </h2>
+            <p class="cartao__subtitulo">Fique por dentro das principais informações, comunicados e atualizações da nossa equipe.</p>
+          </div>
+          <a class="cartao__ver-todas" href="#">Ver todas <svg class="icone" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a>
+        </div>
+
+        <ul class="novidades">
+          <li class="novidade">
+            <div class="novidade__midia">
+              <img src="../assets/images/portal-novidade-defis.webp"
+                   srcset="../assets/images/portal-novidade-defis-380.webp 380w, ../assets/images/portal-novidade-defis.webp 600w"
+                   sizes="(max-width: 900px) 90vw, 22vw"
+                   width="1448" height="1086" loading="lazy" decoding="async" alt="">
+              <span class="etiqueta etiqueta--comunicado">Comunicado</span>
+            </div>
+            <h3>Prazo da DEFIS 2024</h3>
+            <p>Atenção ao prazo de entrega da DEFIS para empresas do Simples Nacional.</p>
+            <time datetime="2026-11-12">12 de novembro de 2026</time>
+          </li>
+
+          <li class="novidade">
+            <div class="novidade__midia">
+              <img src="../assets/images/portal-novidade-planejamento.webp"
+                   srcset="../assets/images/portal-novidade-planejamento-380.webp 380w, ../assets/images/portal-novidade-planejamento.webp 600w"
+                   sizes="(max-width: 900px) 90vw, 22vw"
+                   width="1448" height="1086" loading="lazy" decoding="async" alt="">
+              <span class="etiqueta etiqueta--informativo">Informativo</span>
+            </div>
+            <h3>Planejamento Tributário para 2027</h3>
+            <p>Já estamos iniciando o planejamento para o próximo ano. Fale com nossa equipe!</p>
+            <time datetime="2026-11-08">08 de novembro de 2026</time>
+          </li>
+
+          <li class="novidade">
+            <div class="novidade__midia">
+              <img src="../assets/images/portal-novidade-compromisso.webp"
+                   srcset="../assets/images/portal-novidade-compromisso-380.webp 380w, ../assets/images/portal-novidade-compromisso.webp 600w"
+                   sizes="(max-width: 900px) 90vw, 22vw"
+                   width="1448" height="1086" loading="lazy" decoding="async" alt="">
+              <span class="etiqueta etiqueta--institucional">Institucional</span>
+            </div>
+            <h3>Nosso compromisso com você</h3>
+            <p>Mais que números, construímos relações de confiança.</p>
+            <time datetime="2026-11-01">01 de novembro de 2026</time>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ======================== DUAS COLUNAS: DOCS + LATERAL ======================== -->
+      <div class="portal__duas-colunas">
+
+        <section class="cartao" aria-labelledby="titulo-documentos">
+          <div class="cartao__cabecalho">
+            <div>
+              <h2 class="cartao__titulo" id="titulo-documentos">
+                <svg class="icone" aria-hidden="true"><use href="#i-documentos"/></svg>
+                Documentos disponíveis
+              </h2>
+              <p class="cartao__subtitulo">Acesse aqui os documentos da sua empresa, organizados e sempre atualizados.</p>
+            </div>
+            <a class="cartao__ver-todas" href="portal-documentos.html">Ver todos <svg class="icone" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a>
+          </div>
+
+          <div class="tabela-scroll">
+            <table class="tabela-documentos">
+              <thead>
+                <tr>
+                  <th scope="col">Nome do documento</th>
+                  <th scope="col">Referência</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Data de envio</th>
+                  <th scope="col"><span class="sr-apenas">Ações</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for doc in documentos %}
+                <tr>
+                  <td>
+                    <span class="doc-tipo doc-tipo--pdf" aria-hidden="true"><svg class="icone"><use href="#i-arquivo"/></svg></span>
+                    {{ doc.nome }}
+                  </td>
+                  <td>{{ doc.referencia }}</td>
+                  <td>{{ doc.tipo }}</td>
+                  <td>{{ doc.data_envio }}</td>
+                  <td class="tabela-documentos__acoes">
+                    {% if doc.anexo_url %}
+                    <a href="{{ doc.anexo_url }}" aria-label="Baixar {{ doc.nome }}"><svg class="icone"><use href="#i-baixar"/></svg></a>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="5">Nenhum documento entregue nos últimos 30 dias.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <aside class="portal__lateral">
+
+          <section class="cartao" aria-labelledby="titulo-vencimentos">
+            <div class="cartao__cabecalho cartao__cabecalho--compacto">
+              <h2 class="cartao__titulo" id="titulo-vencimentos">
+                <svg class="icone" aria-hidden="true"><use href="#i-obrigacoes"/></svg>
+                Próximos vencimentos
+              </h2>
+              <a class="cartao__ver-todas" href="portal-obrigacoes.html">Ver todos <svg class="icone" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a>
+            </div>
+
+            <ul class="vencimentos">
+              {% for v in vencimentos %}
+              <li>
+                <span class="vencimentos__data"><strong>{{ v.dia }}</strong>{{ v.mes }}</span>
+                <span class="vencimentos__texto"><strong>{{ v.nome }}</strong>{{ v.competencia }}</span>
+                <span class="etiqueta-prazo{% if v.breve %} etiqueta-prazo--breve{% endif %}">Em {{ v.dias_restantes }} dia{{ 's' if v.dias_restantes != 1 else '' }}</span>
+              </li>
+              {% else %}
+              <li>Nenhum vencimento nos próximos 30 dias.</li>
+              {% endfor %}
+            </ul>
+          </section>
+
+          <section class="cartao" aria-labelledby="titulo-atendimentos">
+            <div class="cartao__cabecalho cartao__cabecalho--compacto">
+              <h2 class="cartao__titulo" id="titulo-atendimentos">
+                <svg class="icone" aria-hidden="true"><use href="#i-atendimentos"/></svg>
+                Últimos atendimentos
+              </h2>
+              <a class="cartao__ver-todas" href="portal-solicitacoes.html">Ver todos <svg class="icone" aria-hidden="true"><use href="#i-chevron-dir"/></svg></a>
+            </div>
+
+            <ul class="atendimentos">
+              {% for a in atendimentos %}
+              <li>
+                <p><strong>{{ a.assunto }}</strong><span>#AT-{{ a.id }} · {{ a.data }}</span></p>
+                <span class="etiqueta-status etiqueta-status--{{ a.classe_status }}">{{ a.status }}</span>
+              </li>
+              {% else %}
+              <li>Nenhum atendimento recente.</li>
+              {% endfor %}
+            </ul>
+          </section>
+
+          <section class="ajuda-cta">
+            <svg class="icone" aria-hidden="true"><use href="#i-atendimentos"/></svg>
+            <div>
+              <h2>Precisa de ajuda?</h2>
+              <p>Nossa equipe está pronta para atender você.</p>
+            </div>
+            <a class="botao botao--ouro" href="#">
+              Entrar em contato
+              <svg class="icone" aria-hidden="true"><use href="#i-seta"/></svg>
+            </a>
+          </section>
+
+        </aside>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Script exclusivo do portal — não toca no DOM do index.html nem do
+     login.html, e nenhum dos dois toca neste. -->
+<script src="../js/portal.js" defer></script>
+</body>
+</html>

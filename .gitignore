@@ -1,0 +1,24 @@
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Imagens originais em alta: fonte de verdade para reprocessar os assets,
+# não fazem parte do que sobe para o servidor.
+assets/images/originais/
+
+# Dependências e artefatos, caso o projeto ganhe build no futuro
+node_modules/
+dist/
+*.log
+.env
+.env.*
+
+# Backend do login: ambiente virtual e banco SQLite são locais de cada
+# máquina/servidor, não fazem parte do repositório
+backend/venv/
+backend/__pycache__/
+backend/*.db
+backend/*.db-journal
+
+# Pasta gerada por scripts/montar-locaweb.sh pra subir por FTP
+deploy-locaweb/
