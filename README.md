@@ -1,16 +1,21 @@
 # Site Facchini Assessoria Contábil
 
 Landing page de captação de leads em HTML, CSS e JavaScript estáticos — sem
-framework, sem build. O login e o portal do cliente (`pages/login.html` e
-`pages/portal-inicio.html`) são servidos pelo backend em `backend/`
-(FastAPI + SQLite), que também cuida da sessão do cliente.
+framework, sem build no frontend — e portal do cliente e da equipe. Tudo é
+servido por um único app FastAPI (`backend/`, com SQLite) publicado no Railway:
+
+- **https://www.facchiniassessoria.com.br** — lead page
+- **https://portal.facchiniassessoria.com.br** — login e portal
+
+O domínio sem `www`, o DNS e os e-mails ficam na Locaweb. Publicação, contas
+e configuração: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ```bash
-# lead page sozinha (sem login/portal, não precisa do backend)
-python3 -m http.server 4173   # depois abra http://127.0.0.1:4173
-
-# site completo, com login e portal funcionando — ver backend/README abaixo
+# site completo local (lead page em /, login em /pages/login.html)
 cd backend && venv/bin/uvicorn app:app --reload --port 8000
+
+# publicar (da raiz do projeto)
+railway up --service portal --ci
 ```
 
 ## Estrutura
@@ -30,11 +35,23 @@ assets/
   images/               fotos otimizadas em WebP + variantes responsivas
   images/originais/     PNGs em alta — fonte de verdade, fora do deploy
   logo/                 logo com fundo transparente (versão original e branca)
-backend/                API de login + SQLite — ver seção abaixo
-docs/DEPLOY.md          publicação, backend em produção e dados pendentes
+backend/
+  app.py                rotas: site, login, portal, equipe e API
+  auth.py               hash de senha, senha temporária e limite de tentativas
+  database.py           schema do SQLite (caminho via FACCHINI_DB_PATH)
+  acessorias.py         cliente da API da Acessórias (dados do portal)
+  indexar_contatos.py, create_user.py, criar_usuarios_em_massa.py,
+  criar_funcionario.py  scripts de administrador para criar contas
 pages/
-  login.html            tela de acesso do cliente
-  portal-inicio.html    painel do cliente após o login
+  login.html, equipe-login.html, selecionar-empresa.html
+  portal-*.html         páginas do portal (templates Jinja2, exigem sessão)
+  equipe-atendimento.html  painel da equipe
+  politica-de-privacidade.html
+scripts/                servidor local estático e upload do redirecionamento
+                        para a Locaweb (montar/subir/listar)
+docs/DEPLOY.md          publicação, contas, DNS e pendências
+requirements.txt, railpack.json, railway.json   build e start no Railway
+.htaccess-locaweb       redirecionamento do domínio sem www
 ```
 
 ## Login e portal do cliente
@@ -42,11 +59,15 @@ pages/
 Autenticação real, com senha com hash (bcrypt) e sessão em cookie assinado —
 ver detalhes de execução e publicação em [docs/DEPLOY.md](docs/DEPLOY.md).
 
-- **Sem autocadastro.** Contas são criadas pelo administrador, rodando
-  `backend/create_user.py` direto no servidor — não existe tela de "criar
-  conta" nem endpoint público para isso. Decisão de produto já tomada.
-- **Banco:** SQLite (`backend/facchini.db`), um arquivo por ambiente — não
-  entra no controle de versão.
+- **Sem autocadastro.** Contas são criadas pelo administrador com os scripts
+  de `backend/` (a partir dos contatos cadastrados na Acessórias), rodando
+  dentro do servidor — não existe tela de "criar conta" nem endpoint público
+  para isso. Decisão de produto já tomada. Cada conta recebe uma senha
+  temporária aleatória e troca no primeiro acesso.
+- **Dois logins separados:** cliente (`pages/login.html`, vê só as próprias
+  empresas) e equipe (`pages/equipe-login.html`, vê as solicitações de todos).
+- **Banco:** SQLite, um arquivo por ambiente — local em `backend/facchini.db`,
+  no Railway em `/data/facchini.db` (volume). Não entra no controle de versão.
 - **Sessão:** cookie assinado (`itsdangerous`, via `SessionMiddleware` do
   Starlette), válido por 8 horas. `/logout` encerra a sessão — é um link
   comum, funciona mesmo sem JavaScript.
@@ -74,7 +95,7 @@ e o topo continuam sempre fixos.
 
 ## pages/login.html — tela de acesso do cliente
 
-Interface pronta, sem autenticação real ainda. Fica isolada de propósito:
+Fica isolada de propósito:
 
 - `css/login.css` e `js/login.js` são exclusivos dessa página — nenhum dos dois
   é referenciado pelo `index.html`, nem o contrário. `login.css` só depende de
@@ -83,22 +104,19 @@ Interface pronta, sem autenticação real ainda. Fica isolada de propósito:
   quebrar o login, e vice-versa.
 - O sprite de ícones do login é próprio (`i-usuario`, `i-cadeado`, `i-olho`),
   duplicado do padrão do `index.html` em vez de compartilhado — mesmo motivo.
-- Não existe link de "criar conta": contas serão criadas pelo administrador,
-  sem autoatendimento. Isso é uma decisão de produto já tomada; o *sistema*
-  que cria essas contas ainda não existe.
-- O formulário valida os campos e mostra "login ainda não conectado" no
-  envio — não há backend. Quando houver, o bloco de `fetch` entra em
-  `js/login.js` sem tocar no resto do arquivo (mostrar/ocultar senha e
-  validação continuam do jeito que estão).
+- `js/login.js` envia usuário e senha para `/api/login` e segue para o portal
+  (ou para a escolha de empresa, se o cliente tiver mais de uma).
+- "Esqueceu sua senha?" ainda não leva a lugar nenhum — não existe
+  recuperação de senha.
 - `<meta name="robots" content="noindex, nofollow">` — página de login não
   deve aparecer em busca.
 
-## Antes de publicar
+## Pendências
 
-Há dados de exemplo no site (telefone, e-mail, redes sociais, domínio) **e as
-respostas da seção "Dúvidas" são um rascunho com promessas comerciais** que
-precisam da confirmação da Facchini. A lista completa está em
-[docs/DEPLOY.md](docs/DEPLOY.md).
+**As respostas da seção "Dúvidas" são um rascunho com promessas comerciais**
+que precisam da confirmação da Facchini. Essa e as demais pendências de
+conteúdo (LinkedIn, política de privacidade provisória, links do portal ainda
+sem página) estão em [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Como a página está montada
 

@@ -1,5 +1,21 @@
 # Publicação e configuração
 
+## Como está publicado
+
+| Endereço | Onde roda | O que serve |
+|---|---|---|
+| `www.facchiniassessoria.com.br` | Railway | Lead page (`index.html`) e política de privacidade |
+| `portal.facchiniassessoria.com.br` | Railway | Login e portal do cliente e da equipe |
+| `facchiniassessoria.com.br` (sem www) | Locaweb | Só redireciona para o `www` (via `.htaccess`) |
+| E-mail `@facchiniassessoria.com.br` | Locaweb | Caixas postais (MX/SPF) — **não mexer** |
+| Zona DNS | Locaweb | Aponta os domínios acima |
+
+O `www` e o `portal` são **o mesmo app** (FastAPI em `backend/app.py`), num
+único serviço do Railway. O app decide o que entregar pelo domínio do pedido
+(`_no_portal` em `backend/app.py`): no `portal.` a raiz vai para o login e o
+`robots.txt` bloqueia tudo; em qualquer outro domínio (inclusive `localhost`)
+a raiz é a lead page.
+
 ## 0. PRIORIDADE — as respostas da seção "Dúvidas" são um rascunho
 
 A seção `#duvidas` do `index.html` responde cinco objeções comuns, e as respostas
@@ -13,171 +29,217 @@ promessas comerciais concretas:
 - que os documentos ficam em nuvem com acesso controlado e tratamento LGPD.
 
 Cada uma dessas frases é um compromisso que o cliente vai cobrar. **Conferir e
-corrigir uma por uma antes de publicar.** Se alguma não for verdade hoje,
-apagar a pergunta inteira é melhor do que suavizar a resposta.
+corrigir uma por uma.** Se alguma não for verdade hoje, apagar a pergunta
+inteira é melhor do que suavizar a resposta.
 
-## 1. Dados que precisam ser preenchidos antes de ir ao ar
+## 1. Pendências de conteúdo
 
-O site está com dados de exemplo em alguns pontos. **Nenhum deles pode ir para produção como está.**
-
-| Onde | O que trocar |
+| Onde | O que falta |
 |---|---|
-| `index.html` | `<link rel="canonical">` — domínio real |
-| `index.html` | URLs de Open Graph (`og:url`, `og:image`) |
-| `index.html` | Link do WhatsApp no formulário e no rodapé |
-| `index.html` | Instagram e LinkedIn da empresa |
-| `index.html` | Endereço, telefone e e-mail do escritório |
-| `index.html` | JSON-LD: conferir endereço completo e adicionar `telephone` |
-| `index.html` | `href="#"` da Política de Privacidade (2 ocorrências) |
+| `index.html` | Link do LinkedIn aponta para `https://www.linkedin.com/` genérico — trocar pela página da empresa |
 | `index.html` | "+16 anos" e "+1.000 empresas" — confirmar se seguem corretos |
-| `js/main.js` | `CONFIG.whatsapp` — formato `55` + DDD + número |
-| `robots.txt` / `sitemap.xml` | domínio real |
+| `index.html` | JSON-LD: endereço completo (hoje só cidade/UF) |
+| `pages/politica-de-privacidade.html` | Versão **provisória**: revisar com o jurídico e completar CNPJ e endereço |
+| `pages/login.html` | "Esqueceu sua senha?" é `href="#"` — não existe recuperação de senha ainda |
+| `pages/portal-*.html` | Itens "Comunicados" e "Atendimentos" do menu, "Ver todas" e atalhos do Início são `href="#"` — páginas ainda não construídas (ver `TODO` em `pages/portal-inicio.html`) |
 
-Para localizar tudo de uma vez:
-
-```bash
-grep -rn "TODO\|facchinicontabil.com.br\|5519000000000" index.html js/ robots.txt sitemap.xml
-```
+Já resolvido: domínio real em canonical/Open Graph/`robots.txt`/`sitemap.xml`,
+e-mail de contato (`contato@facchiniassessoria.com.br`), WhatsApp e Instagram.
 
 ## 2. Formulário de contato
 
-Hoje o formulário **valida os dados no navegador e abre o WhatsApp** — não existe backend.
+Hoje o formulário **valida os dados no navegador e abre o WhatsApp** — os
+leads não são gravados em lugar nenhum.
 
-Para receber os leads por e-mail ou gravá-los num banco, preencha `CONFIG.endpointFormulario`
-em `js/main.js`. Ele envia um `POST` com JSON:
+Para receber os leads por e-mail ou gravá-los num banco, preencha
+`CONFIG.endpointFormulario` em `js/main.js`. Ele envia um `POST` com JSON:
 
 ```json
 { "nome": "", "empresa": "", "email": "", "telefone": "", "segmento": "", "mensagem": "", "origem": "/" }
 ```
 
-**Ao apontar para um domínio externo** (Formspree, Web3Forms, uma função serverless etc.),
-é obrigatório liberá-lo na CSP do `index.html`, senão o navegador bloqueia o envio:
+O caminho mais simples é uma rota nova no próprio `backend/app.py` (mesmo
+domínio, a CSP já permite). **Ao apontar para um domínio externo** (Formspree,
+Web3Forms etc.), é obrigatório liberá-lo na CSP do `index.html`, senão o
+navegador bloqueia o envio:
 
 ```
 connect-src 'self' https://seu-endpoint.exemplo;
 form-action 'self' https://seu-endpoint.exemplo;
 ```
 
-### O que o backend ainda precisa fazer
+Quem receber os dados precisa, obrigatoriamente: validar tudo de novo no
+servidor; tratar os dados como texto (nunca interpolar em HTML ou SQL cru);
+limitar requisições por IP (o campo-armadilha só barra robôs simples); e
+registrar a base legal do consentimento LGPD com data/hora e IP.
 
-A validação no navegador é conveniência, não segurança — ela pode ser contornada.
-Quem receber os dados precisa, obrigatoriamente:
+## 3. Railway (site e portal)
 
-- validar todos os campos de novo no servidor;
-- tratar os dados como texto ao gravar ou exibir (nunca interpolar em HTML ou SQL cru);
-- aplicar limite de requisições por IP (o campo-armadilha do formulário barra apenas robôs simples);
-- registrar a base legal do consentimento LGPD junto com data/hora e IP.
+Projeto **`facchini-portal`**, serviço **`portal`**, ambiente `production`.
 
-## 3. Backend do login (FastAPI + SQLite)
+### Como o build funciona
 
-`pages/login.html` e `pages/portal-inicio.html` não são mais arquivos
-estáticos "soltos" — o backend em `backend/` (FastAPI) é quem serve o
-site inteiro agora, porque ele precisa interceptar o pedido das páginas
-do portal e checar a sessão antes de entregá-las. Isso muda a hospedagem:
-**precisa de um servidor que rode um processo Python continuamente**, não
-serve mais hospedagem puramente estática (item 4 abaixo detalha).
+| Arquivo | Papel |
+|---|---|
+| `requirements.txt` (raiz) | Dependências Python. `backend/requirements.txt` só aponta para ele (`-r ../requirements.txt`) |
+| `railpack.json` | Comando de start: `cd backend && uvicorn app:app --host 0.0.0.0 --port $PORT ...` |
+| `railway.json` | Healthcheck em `/pages/login.html` e reinício automático em falha |
 
-### Rodando o backend
+O builder do Railway copia só o `requirements.txt` da raiz antes de instalar —
+por isso as versões ficam nele, não em `backend/`.
+
+### Publicar uma alteração
+
+Não há deploy automático por Git. A partir da raiz do projeto:
+
+```bash
+railway up --service portal --ci
+```
+
+Sobe a pasta respeitando o `.gitignore` (nunca envia `.env`, banco, `venv` ou
+`assets/images/originais/`) e mostra o log do build. Termina com
+`Deploy complete` ou `Deploy failed`.
+
+### Variáveis de ambiente
+
+| Variável | Valor / para quê |
+|---|---|
+| `SESSION_SECRET` | Assina o cookie de sessão. Com `ENV=production` e sem ela, o app **se recusa a subir**. Gerar com `python3 -c "import secrets; print(secrets.token_hex(32))"` |
+| `ACESSORIAS_API_TOKEN` | Token da API da Acessórias (no Acessórias: engrenagem → "API Token") |
+| `ENV` | `production` — cookie só via HTTPS e cabeçalho HSTS |
+| `FACCHINI_DB_PATH` | `/data/facchini.db` — o banco fica no volume |
+| `PORT` | `8080` — mesma porta configurada nos domínios |
+
+Segredos são definidos por quem tem o valor, direto no terminal, sem exibi-lo:
+
+```bash
+railway variables --service portal --set "NOME=valor"
+```
+
+### Banco de dados (volume)
+
+O SQLite fica no volume `portal-dados`, montado em `/data`. O disco do
+container é apagado a cada deploy; o volume não. O schema é criado/migrado
+sozinho na inicialização (`inicializar_schema()` em `backend/database.py`).
+
+**Nunca copie o `backend/facchini.db` do seu computador para produção.** O
+banco local tem contas criadas com a antiga senha padrão fixa.
+
+### Domínios e DNS
+
+| Domínio | Registro na zona DNS da Locaweb |
+|---|---|
+| `portal.facchiniassessoria.com.br` | `CNAME portal → y8hxr2ki.up.railway.app` + `TXT _railway-verify.portal` |
+| `www.facchiniassessoria.com.br` | `CNAME www → 2ytu9q4f.up.railway.app` + `TXT _railway-verify.www` |
+
+Os TXT `_railway-verify.*` provam ao Railway que o domínio é nosso — não
+apagar. O certificado HTTPS é emitido e renovado pelo Railway. Se ele travar
+em "issuing" ou falhar com erro interno, peça uma nova emissão (no painel do
+domínio no Railway, ou pela API) — o do `www` precisou de duas tentativas.
+
+O domínio sem `www` não pode apontar para o Railway: o Railway exige CNAME, e
+CNAME não pode coexistir com os registros de e-mail (MX/TXT) na raiz. Por
+isso ele fica na Locaweb, redirecionando (seção 5).
+
+### Segurança no servidor
+
+- Só `css/`, `js/`, `assets/` e `pages/` são servidos como arquivo estático —
+  **nunca** a raiz do projeto (que expõe `backend/.env`, o banco e o código).
+  Arquivos da raiz que precisam ser públicos (`index.html`, `robots.txt`,
+  `sitemap.xml`, `site.webmanifest`) têm rota própria em `backend/app.py`.
+- Os cabeçalhos HTTP de segurança são enviados pelo próprio app (middleware
+  `cabecalhos_seguranca`): `X-Content-Type-Options`, `Referrer-Policy`,
+  `Content-Security-Policy: frame-ancestors 'none'`, `Permissions-Policy` e,
+  em produção, `Strict-Transport-Security`. A CSP completa continua no
+  `<meta>` de cada página.
+- Cache: em produção os arquivos estáticos saem com `ETag`/`Last-Modified`
+  (o navegador revalida). Em desenvolvimento o cache é desligado. Ao trocar
+  uma imagem com o mesmo nome, acrescente `?v=2` no link se quiser forçar.
+
+## 4. Contas de acesso
+
+Não existe autocadastro (decisão de produto): contas são criadas pelo
+administrador, rodando scripts dentro do servidor. Toda conta criada ou com
+senha redefinida pelo administrador recebe uma **senha temporária aleatória**
+(nunca uma senha fixa) e é obrigada a trocá-la no primeiro acesso.
+
+Em produção, os scripts rodam dentro do container do Railway, que enxerga o
+volume e as variáveis:
+
+```bash
+railway ssh --service portal
+cd /app/backend
+```
+
+| Script | Para quê |
+|---|---|
+| `python indexar_contatos.py` | Varre todas as empresas na Acessórias e guarda "e-mail de contato → empresas". Leva alguns minutos (respeita o limite de 100 req/min). Rodar antes dos outros e sempre que o cadastro mudar bastante |
+| `python criar_usuarios_em_massa.py` | Cria um login para cada e-mail do índice, com senha temporária individual, e lista `e-mail: senha` no fim. Nunca sobrescreve conta existente |
+| `python create_user.py` | Cria ou redefine um cliente específico (interativo; acha as outras empresas pelo índice) |
+| `python criar_funcionario.py` | Cria ou redefine um login da equipe (painel de atendimento) |
+
+As senhas listadas por `criar_usuarios_em_massa.py` aparecem só no terminal
+de quem rodou: entregue a cada cliente por um canal individual e não guarde a
+lista.
+
+## 5. Locaweb (DNS, e-mail e redirecionamento)
+
+Plano **Hospedagem I**. Depois da migração do site para o Railway, ela cuida só de:
+
+- **Zona DNS** — painel DNS da Locaweb. Os registros de e-mail (MX, SPF,
+  `autodiscover`, `pop`, `imap`, `smtp`, `webmail`) **não podem ser alterados**.
+- **E-mail** — as caixas `@facchiniassessoria.com.br`.
+- **Redirecionamento do domínio sem www** — a hospedagem serve só um
+  `.htaccess` que manda tudo para `https://www.facchiniassessoria.com.br`.
+
+### Subir o redirecionamento
+
+```bash
+scripts/montar-locaweb.sh
+scripts/subir-locaweb.sh
+```
+
+O primeiro gera `deploy-locaweb/.htaccess` a partir de `.htaccess-locaweb`; o
+segundo envia por FTP para `public_html/` (pede a senha do FTP, usuário
+`facchiniassessoria1`). `scripts/listar-ftp.sh` só lista as pastas, para
+conferir. O FTP da Locaweb **não tem criptografia** — não rode em Wi-Fi público.
+
+Para o `https://facchiniassessoria.com.br` redirecionar sem alerta, o
+certificado Let's Encrypt do domínio precisa ser emitido no painel da
+hospedagem (Informações de domínio → Let's Encrypt).
+
+### Histórico
+
+Em 18/10/2026 a hospedagem respondia 403/404 para qualquer arquivo: tinha sido
+migrada para um servidor novo e o IP do domínio não foi atualizado. O suporte
+(protocolo 2610182397493) corrigiu o registro A para `179.188.54.225`. Se o
+domínio sem www voltar a falhar, cite esse protocolo.
+
+## 6. Rodar localmente
 
 ```bash
 cd backend
 python3 -m venv venv
 venv/bin/pip install -r requirements.txt
-cp .env.example .env        # preencher SESSION_SECRET (ver instrução no arquivo)
-venv/bin/uvicorn app:app --host 0.0.0.0 --port 8000
+cp .env.example .env        # preencher ACESSORIAS_API_TOKEN; SESSION_SECRET é opcional local
+venv/bin/uvicorn app:app --reload --port 8000
 ```
 
-Isso serve **o site inteiro** (lead page, login e portal) em
-`http://servidor:8000` — não só a API. Normalmente fica atrás de um Nginx
-que faz proxy da porta 80/443 para a 8000 e cuida do TLS.
-
-### Criando contas de cliente
-
-Não existe autocadastro (decisão de produto). Para dar acesso a um
-cliente nomeado, direto no servidor:
+Abra <http://127.0.0.1:8000>: a raiz é a lead page e o login fica em
+`/pages/login.html`. Para simular o domínio do portal:
 
 ```bash
-cd backend && venv/bin/python3 create_user.py
+curl -H "Host: portal.facchiniassessoria.com.br" http://127.0.0.1:8000/
 ```
 
-Pede e-mail, nome e senha, e cria (ou atualiza a senha de) o usuário no
-SQLite.
+**Não defina `ENV=production` localmente** (sem HTTPS o cookie de sessão não
+"cola" e o login parece não funcionar). Precisa ser via servidor: abrir o
+`index.html` direto pelo `file://` quebra as fontes e a CSP.
 
-### Variáveis de ambiente obrigatórias em produção
+## 7. O que nunca vai para produção
 
-| Variável | Para quê |
-|---|---|
-| `SESSION_SECRET` | Assina o cookie de sessão. Gerar com `python3 -c "import secrets; print(secrets.token_hex(32))"` — com `ENV=production` e sem essa variável, o backend **se recusa a subir**. Em desenvolvimento, sem ela, gera uma chave aleatória por execução (sessões caem a cada restart). |
-| `ENV=production` | Faz o cookie de sessão exigir HTTPS (`Secure`). Sem HTTPS na frente, **não defina isso**, ou o login trava. |
-
-### Manter o processo no ar
-
-Um `uvicorn` rodando direto no terminal cai quando a sessão SSH fecha.
-Em produção, gerencie o processo com `systemd`, `supervisor` ou
-`pm2`/`forever` (o que já existir no servidor). O essencial: o comando é
-sempre `venv/bin/uvicorn app:app --host 0.0.0.0 --port 8000` a partir de
-`backend/`, com `SESSION_SECRET` e `ENV=production` no ambiente.
-
-### Se a hospedagem só rodar PHP (hospedagem compartilhada, sem processo Python)
-
-Esse backend precisa de um servidor que execute um processo Python
-próprio (VPS/Cloud). Hospedagem compartilhada tradicional (cPanel, só
-PHP+MySQL) não roda o FastAPI como está — nesse caso o backend teria que
-ser reescrito em PHP antes de publicar. Confirme com a hospedagem qual é
-o tipo de plano antes de seguir com o deploy.
-
-## 4. Cabeçalhos de segurança no servidor
-
-A CSP já vai no `<meta>` do HTML, mas três proteções **só funcionam como header HTTP**.
-Configure no servidor ou na CDN:
-
-```
-Strict-Transport-Security: max-age=31536000; includeSubDomains
-X-Content-Type-Options: nosniff
-Referrer-Policy: strict-origin-when-cross-origin
-Content-Security-Policy: frame-ancestors 'none'
-Permissions-Policy: geolocation=(), microphone=(), camera=()
-```
-
-`frame-ancestors` é o que impede o site de ser embutido em um iframe de terceiros
-(clickjacking) — e é ignorado quando declarado via `<meta>`.
-
-## 5. O que subir para o servidor
-
-Suba tudo, **exceto**:
-
-- `assets/images/originais/` — PNGs em alta (18 MB). São a fonte para reprocessar os
-  assets, não são usados pelo site. Já estão no `.gitignore` e bloqueados no `robots.txt`.
+- `assets/images/originais/` — PNGs em alta (18 MB), fonte para reprocessar
+  as imagens. Fora do Git e bloqueados no `robots.txt`.
+- `backend/.env`, `backend/facchini.db`, `backend/venv/` — específicos de cada
+  ambiente, todos no `.gitignore` (e, por isso, fora do `railway up`).
 - `.claude/` — configuração local de desenvolvimento.
-- `backend/venv/`, `backend/facchini.db`, `backend/.env` — específicos de cada
-  ambiente; recriar no servidor (item 3 acima), nunca copiar do seu computador.
-
-Não há build no frontend (HTML/CSS/JS estáticos), mas **agora precisa de um
-servidor que rode o backend Python** (item 3) — hospedagem puramente estática
-(Netlify, Vercel, Cloudflare Pages, GitHub Pages) não serve mais sozinha,
-porque nenhuma delas mantém um processo FastAPI no ar. Um VPS/Cloud com
-Nginx na frente do Uvicorn funciona.
-
-### Cache recomendado
-
-```
-assets/*   →  Cache-Control: public, max-age=31536000, immutable
-css/*, js/*  →  Cache-Control: public, max-age=86400
-index.html   →  Cache-Control: no-cache
-```
-
-Ao trocar uma imagem ou o CSS, mude o nome do arquivo (ou acrescente `?v=2` no link)
-para o cache longo não servir a versão antiga.
-
-## 6. Rodar localmente
-
-```bash
-# só a lead page (sem login/portal, não precisa do backend)
-python3 -m http.server 4173
-```
-
-Depois abra <http://127.0.0.1:4173>. Precisa ser via servidor: abrir o `index.html`
-direto pelo `file://` quebra as fontes e a CSP.
-
-Para testar login e portal, use o backend (item 3) — ele serve o site
-inteiro, inclusive a lead page, em `http://127.0.0.1:8000`.
