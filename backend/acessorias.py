@@ -317,3 +317,134 @@ async def criar_solicitacao(
     except httpx.HTTPError as erro:
         logger.error("Falha ao criar solicitação na Acessórias: %s", erro)
         return {"Erro": "Falha de conexão com a Acessórias. Tente de novo."}
+
+
+# --- Painel da equipe: fila paginada, detalhe e atualização -------------
+# Escrita em solicitação, segundo a documentação oficial
+# (https://api.acessorias.com/documentation, seção "Requests
+# (criação/edição)"): só existe POST /requests/{id}, que num envio só
+# comenta (descricao), muda o status (statusSol R/C/F — F finaliza),
+# reabre (reabrir=1), marca o comentário como privado (descPrivate=S),
+# muda prazo/assunto/tipo/departamento e anexa arquivos. NÃO existe
+# endpoint pra atribuir responsável — isso continua só no sistema deles.
+
+async def listar_fila_solicitacoes(pagina: int = 1, status: str | None = None, paginas_por_bloco: int = 5) -> dict:
+    """Uma "página" do painel = um bloco de `paginas_por_bloco` páginas
+    da Acessórias (20 itens cada, fixo do lado deles), buscadas em
+    paralelo, mais UMA página a frente só pra saber se existe próxima —
+    sem isso, o painel cortava a fila em 100 itens sem avisar ninguém.
+    A página a frente fica no cache de _get e é reaproveitada quando a
+    equipe clica em "Próxima", então não é chamada desperdiçada.
+    `status` vira o filtro SolStatus da própria Acessórias (A, P, C, F).
+
+    Devolve {"solicitacoes": [...], "tem_mais": bool, "falhou": bool} —
+    "falhou" separa "a Acessórias não respondeu" de "fila vazia", que
+    antes apareciam iguais pra equipe."""
+    filtros = {"SolStatus": status} if status else {}
+    primeira = (pagina - 1) * paginas_por_bloco + 1
+    respostas = await asyncio.gather(
+        *(
+            _get("/requests/ListAll", params={"Pagina": numero, **filtros})
+            for numero in range(primeira, primeira + paginas_por_bloco + 1)
+        )
+    )
+    *bloco, a_frente = respostas
+    return {
+        "solicitacoes": [item for dados in bloco if isinstance(dados, list) for item in dados],
+        "tem_mais": isinstance(a_frente, list) and len(a_frente) > 0,
+        "falhou": bloco[0] is None,
+    }
+
+
+async def buscar_solicitacao(sol_id: str) -> dict | None:
+    """GET /requests/{SolID} — mesma estrutura de um item de ListAll,
+    mais SolInteracoes (o histórico). A Acessórias devolve uma lista com
+    um item só, e SolInteracoes vem como lista de listas — normaliza os
+    dois aqui pra quem chama não precisar saber disso."""
+    dados = await _get(f"/requests/{sol_id}")
+    if isinstance(dados, list):
+        dados = dados[0] if dados else None
+    if not isinstance(dados, dict) or "Erro" in dados or not dados.get("SolID"):
+        return None
+    interacoes = []
+    for item in dados.get("SolInteracoes") or []:
+        if isinstance(item, list):
+            interacoes.extend(i for i in item if isinstance(i, dict))
+        elif isinstance(item, dict):
+            interacoes.append(item)
+    return {**dados, "SolInteracoes": interacoes}
+
+
+def _invalidar_cache_solicitacoes(sol_id: str) -> None:
+    """Depois de qualquer escrita: some com o detalhe da solicitação e
+    com TODAS as páginas de ListAll em cache (com e sem filtro de
+    status) — ListAll vem ordenado pela última atualização, então a
+    solicitação recém-alterada muda de página."""
+    for chave in [c for c in _cache if c[0] in ("/requests/ListAll", f"/requests/{sol_id}")]:
+        del _cache[chave]
+
+
+# Mensagens de erro documentadas da Acessórias -> texto nosso. Nunca
+# repassa o texto cru deles pro navegador; o original vai só pro log.
+_ERROS_EDICAO_CONHECIDOS = (
+    ("está finalizada", "Esta solicitação está finalizada. Escolha Resolvendo ou Com o cliente para reabrir."),
+    ("não é permitido em solicitação interna", "Solicitação interna não pode ficar com o status Com o cliente."),
+    ("obrigatório ao alterar o status", "Escreva um comentário para mudar o status."),
+    ("statusSol é obrigatório", "Escolha o novo status da solicitação."),
+)
+_ERRO_EDICAO_GENERICO = "A Acessórias não aceitou a alteração. Confira a solicitação e tente de novo."
+
+
+async def atualizar_solicitacao(
+    sol_id: str,
+    descricao: str,
+    status_sol: str,
+    privado: bool = False,
+    reabrir: bool = False,
+    data_prazo: str | None = None,
+) -> dict:
+    """POST /requests/{id} — comenta e define o status num envio só (a
+    Acessórias exige status ao comentar, e comentário ao mudar status).
+    Como criar_solicitacao: sem cache e sem nova tentativa automática
+    em 429 (reenviar sozinho poderia duplicar o comentário).
+
+    Devolve {"ok": True} ou {"Erro": <mensagem já tratada pra equipe>}.
+    Quem chama já validou os campos — aqui só monta a requisição."""
+    token = _token()
+    if not token:
+        return {"Erro": "Integração com a Acessórias está indisponível agora. Tente de novo mais tarde."}
+
+    campos = {"statusSol": status_sol, "descricao": descricao, "descPrivate": "S" if privado else "N"}
+    if reabrir:
+        campos["reabrir"] = "1"
+    if data_prazo:
+        campos["data_prazo"] = data_prazo
+
+    try:
+        resposta = await _obter_cliente().post(
+            f"{BASE_URL}/requests/{sol_id}",
+            data=campos,
+            headers={"Authorization": f"Bearer {token}"},
+        )
+    except httpx.HTTPError as erro:
+        logger.error("Falha ao atualizar solicitação %s na Acessórias: %s", sol_id, erro)
+        return {"Erro": "Falha de conexão com a Acessórias. Tente de novo."}
+
+    if resposta.status_code == 429:
+        return {"Erro": "A Acessórias está recebendo muitas requisições agora. Aguarde um minuto e tente de novo."}
+    try:
+        resultado = resposta.json()
+    except ValueError:
+        resultado = {}
+
+    erro_api = resultado.get("Erro") if isinstance(resultado, dict) else None
+    if resposta.status_code >= 400 or erro_api:
+        logger.error("Acessórias recusou atualização da solicitação %s (%s): %s", sol_id, resposta.status_code, erro_api)
+        texto = str(erro_api or "")
+        for trecho, mensagem in _ERROS_EDICAO_CONHECIDOS:
+            if trecho in texto:
+                return {"Erro": mensagem}
+        return {"Erro": _ERRO_EDICAO_GENERICO}
+
+    _invalidar_cache_solicitacoes(sol_id)
+    return {"ok": True}

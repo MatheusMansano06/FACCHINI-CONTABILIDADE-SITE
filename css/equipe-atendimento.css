@@ -1,0 +1,195 @@
+/* =============================================================
+   Central de Atendimento (painel da equipe) — só o que é exclusivo
+   desta página: paginação da fila, painel de detalhe com histórico
+   e formulário de resposta. O resto vem de portal-shell.css.
+   ============================================================= */
+
+/* Texto só para leitor de tela (cabeçalho da coluna de ações). */
+.atendimento-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.atendimento-aviso {
+  margin-bottom: var(--e-3);
+  padding: 0.6rem 0.8rem;
+  font-size: var(--t-xs);
+  color: #B3261E;
+  background: rgb(179 38 30 / 0.08);
+  border-radius: var(--raio-sm);
+}
+
+/* ------------------------------ botão "Abrir" da linha ------------------------------ */
+.atendimento-acoes { text-align: right; }
+
+.atendimento-abrir {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--navy-900);
+  background: var(--osso);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-pill);
+  transition: border-color var(--transicao), background-color var(--transicao);
+}
+.atendimento-abrir:hover { border-color: var(--ouro); }
+.atendimento-abrir[aria-expanded="true"] { background: rgb(217 164 65 / 0.14); border-color: var(--ouro); }
+/* display acima venceria o [hidden] nativo (mesma especificidade). */
+.atendimento-abrir[hidden] { display: none; }
+
+tr.esta-aberta > td { background: var(--osso); }
+
+/* ------------------------------------ paginação ------------------------------------ */
+.atendimento-paginacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e-3);
+  margin-top: var(--e-3);
+  padding-top: var(--e-3);
+  border-top: 1px solid var(--borda);
+  font-size: var(--t-xs);
+}
+.atendimento-paginacao__atual { color: var(--tinta-suave); }
+.atendimento-paginacao__link {
+  padding: 0.4rem 0.8rem;
+  font-weight: 600;
+  color: var(--navy-900);
+  border: 1.5px solid var(--borda);
+  border-radius: var(--raio-sm);
+}
+a.atendimento-paginacao__link:hover { background: var(--osso); border-color: var(--ouro); }
+.atendimento-paginacao__link[aria-disabled="true"] { color: var(--tinta-suave); opacity: 0.5; }
+
+/* ------------------------------------ detalhe ------------------------------------ */
+/* tbody td do portal-shell é nowrap (linhas da tabela numa linha só) —
+   o detalhe tem texto corrido e precisa quebrar normalmente. */
+.atendimento-detalhe > td {
+  padding: 0;
+  white-space: normal;
+  background: var(--osso);
+}
+
+/* A tabela costuma ser mais larga que a tela (colunas nowrap) e rola de
+   lado dentro de .tabela-scroll; a célula do detalhe ocupa a largura
+   inteira da tabela. Sem isto, o histórico e o formulário ficavam
+   cortados à esquerda/direita. Com o container query, a caixa tem
+   exatamente a largura VISÍVEL e fica grudada na borda esquerda. */
+.tabela-scroll { container-type: inline-size; }
+
+.atendimento-detalhe__caixa {
+  position: sticky;
+  left: 0;
+  box-sizing: border-box;
+  width: 100cqi;
+  display: grid;
+  gap: var(--e-3);
+  padding: 0.9rem 1rem 1.1rem;
+}
+
+.atendimento-detalhe__estado { font-size: var(--t-xs); color: var(--tinta-suave); }
+.atendimento-detalhe__estado:empty { display: none; }
+.atendimento-detalhe__estado.esta-erro { color: #B3261E; }
+
+.atendimento-detalhe__conteudo { display: grid; gap: var(--e-3); }
+.atendimento-detalhe__conteudo[hidden] { display: none; }
+
+.atendimento-detalhe__resumo {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--e-2) var(--e-4);
+}
+.atendimento-detalhe__resumo > div { display: grid; gap: 0.1rem; }
+.atendimento-detalhe__resumo dt { font-size: 0.68rem; color: var(--tinta-suave); }
+.atendimento-detalhe__resumo dd { font-size: var(--t-xs); font-weight: 500; color: var(--navy-900); }
+
+.atendimento-detalhe__titulo {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--navy-900);
+}
+
+.atendimento-historico {
+  display: grid;
+  gap: var(--e-2);
+  max-height: 22rem;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+.atendimento-historico__item {
+  padding: 0.55rem 0.7rem;
+  background: var(--branco);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-sm);
+}
+.atendimento-historico__item--privado { border-left: 3px solid var(--ouro); }
+.atendimento-historico__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.6rem;
+  font-size: 0.68rem;
+  color: var(--tinta-suave);
+}
+.atendimento-historico__meta strong { color: var(--navy-900); }
+.atendimento-historico__texto {
+  margin-top: 0.3rem;
+  font-size: var(--t-xs);
+  color: var(--tinta);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.atendimento-historico__anexos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.8rem;
+  margin-top: 0.35rem;
+  font-size: var(--t-xs);
+}
+.atendimento-historico__anexos a { color: var(--ouro-escuro); font-weight: 600; text-decoration: underline; }
+.atendimento-historico__vazio { font-size: var(--t-xs); color: var(--tinta-suave); }
+
+/* ------------------------------------ formulário de resposta ------------------------------------ */
+.atendimento-resposta {
+  display: grid;
+  gap: var(--e-3);
+  max-width: 44rem;
+  padding-top: var(--e-3);
+  border-top: 1px solid var(--borda);
+}
+
+.atendimento-resposta__linha {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--e-3);
+}
+
+.atendimento-resposta__privado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: var(--t-xs);
+  color: var(--tinta);
+}
+.atendimento-resposta__privado[hidden] { display: none; }
+
+.atendimento-resposta__nota { font-size: 0.7rem; color: var(--tinta-suave); }
+
+.atendimento-resposta__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e-3);
+}
+.atendimento-resposta__acoes .botao { padding: 0.6rem 1.2rem; font-size: var(--t-xs); }
+.atendimento-resposta__acoes .botao:disabled { opacity: 0.6; cursor: progress; }
+
+.atendimento-resposta__retorno { font-size: var(--t-xs); font-weight: 500; color: #1E8449; }
+.atendimento-resposta__retorno:empty { display: none; }
+.atendimento-resposta__retorno.esta-erro { color: #B3261E; }
