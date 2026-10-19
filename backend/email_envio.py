@@ -1,7 +1,12 @@
-"""Envio de e-mail pela caixa da Facchini na Locaweb (SMTP com SSL).
+"""Envio de e-mail do portal (link de "Esqueceu sua senha?").
 
-Só stdlib (smtplib/email). As credenciais vêm sempre do ambiente — nada
-fixo no código (ver backend/.env.example):
+Dois caminhos, escolhidos pelo ambiente — nada fixo no código (ver
+backend/.env.example):
+
+1. RESEND_API_KEY definido: envia pela API HTTPS do Resend. É o caminho em
+   produção: o Railway bloqueia SMTP de saída nos planos Free/Trial/Hobby.
+   O remetente (EMAIL_REMETENTE) precisa ser de um domínio verificado lá.
+2. Senão, SMTP com SSL pela caixa da Locaweb:
 
     SMTP_HOST         padrão email-ssl.com.br
     SMTP_PORT         padrão 465 (SSL direto)
@@ -23,6 +28,8 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 from email.utils import formataddr, formatdate, make_msgid
+
+import httpx
 
 log = logging.getLogger("facchini.email")
 
@@ -49,17 +56,54 @@ def url_portal() -> str:
     return (os.environ.get("URL_PORTAL") or "https://portal.facchiniassessoria.com.br").rstrip("/")
 
 
+def _chave_resend() -> str:
+    return os.environ.get("RESEND_API_KEY", "").strip()
+
+
 def smtp_configurado() -> bool:
+    """True se há algum jeito de enviar (API do Resend ou SMTP)."""
     cfg = _config()
-    return bool(cfg["usuario"] and cfg["senha"]) or not cfg["ssl"]
+    return bool(_chave_resend()) or bool(cfg["usuario"] and cfg["senha"]) or not cfg["ssl"]
+
+
+def _enviar_por_resend(destinatario: str, assunto: str, texto: str, corpo_html: str | None) -> bool:
+    cfg = _config()
+    dados = {
+        # Texto puro: a API aceita UTF-8 direto (formataddr codificaria o
+        # "á" no formato de cabeçalho SMTP, que apareceria literal).
+        "from": f"{NOME_REMETENTE} <{cfg['remetente']}>",
+        "to": [destinatario],
+        "subject": assunto,
+        "text": texto,
+    }
+    if corpo_html:
+        dados["html"] = corpo_html
+    try:
+        resposta = httpx.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {_chave_resend()}"},
+            json=dados,
+            timeout=20,
+        )
+    except httpx.HTTPError as erro:
+        log.error("Falha ao falar com a API do Resend — %s", type(erro).__name__)
+        return False
+    if resposta.status_code >= 300:
+        # Só o código e a mensagem de erro deles — nunca o corpo enviado.
+        log.error("Resend recusou o e-mail: HTTP %s %s", resposta.status_code, resposta.text[:200])
+        return False
+    return True
 
 
 def enviar_email(destinatario: str, assunto: str, texto: str, corpo_html: str | None = None) -> bool:
     """Devolve True se o servidor aceitou a mensagem. Nunca levanta exceção
     e nunca registra o corpo no log (ele pode conter link com token)."""
+    if _chave_resend():
+        return _enviar_por_resend(destinatario, assunto, texto, corpo_html)
+
     cfg = _config()
     if not smtp_configurado():
-        log.warning("SMTP não configurado (SMTP_USUARIO/SMTP_SENHA vazios) — e-mail não enviado.")
+        log.warning("E-mail não configurado (RESEND_API_KEY ou SMTP_USUARIO/SMTP_SENHA) — não enviado.")
         return False
 
     mensagem = EmailMessage()
