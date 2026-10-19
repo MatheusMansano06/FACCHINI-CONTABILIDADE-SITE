@@ -213,3 +213,17 @@ def inicializar_schema() -> None:
         conexao.execute(
             "CREATE INDEX IF NOT EXISTS idx_tokens_redefinicao_conta ON tokens_redefinicao_senha (tipo, conta_id)"
         )
+
+        # Tour guiado do Henrique: quais telas cada conta já viu (ou pulou),
+        # pra ele só aparecer sozinho na primeira visita. Guardado no servidor,
+        # não no navegador, pra não repetir quando a pessoa troca de aparelho.
+        conexao.execute("""
+            CREATE TABLE IF NOT EXISTS tours_vistos (
+                tipo TEXT NOT NULL CHECK (tipo IN ('cliente', 'equipe')),
+                conta_id INTEGER NOT NULL,
+                tour TEXT NOT NULL,
+                status TEXT NOT NULL CHECK (status IN ('concluido', 'pulado')),
+                visto_em TEXT NOT NULL DEFAULT (datetime('now')),
+                PRIMARY KEY (tipo, conta_id, tour)
+            )
+        """)

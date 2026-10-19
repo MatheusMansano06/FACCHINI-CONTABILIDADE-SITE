@@ -38,9 +38,10 @@
 <!-- Só o que é exclusivo desta tela (banner, acesso rápido, novidades).
      Nenhuma outra página do portal carrega este arquivo. -->
 <link rel="stylesheet" href="../css/portal-inicio.css">
+<link rel="stylesheet" href="../css/tour.css">
 </head>
 
-<body>
+<body data-tour="inicio" data-tour-area="cliente">
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 
 <!-- Sprite próprio do portal: nada daqui é compartilhado com o sprite do
@@ -506,5 +507,7 @@
 <!-- Script exclusivo do portal — não toca no DOM do index.html nem do
      login.html, e nenhum dos dois toca neste. -->
 <script src="../js/portal.js" defer></script>
+<script src="../js/tour-roteiros.js" defer></script>
+<script src="../js/tour.js" defer></script>
 </body>
 </html>

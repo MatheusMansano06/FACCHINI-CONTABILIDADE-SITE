@@ -35,9 +35,10 @@
      pra justificar um CSS próprio — os estilos ficam em portal-shell.css
      mesmo (.filtro-status já é um componente genérico de lá). -->
 <link rel="stylesheet" href="../css/portal-shell.css">
+<link rel="stylesheet" href="../css/tour.css">
 </head>
 
-<body>
+<body data-tour="obrigacoes" data-tour-area="cliente">
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 
 <svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
@@ -300,5 +301,7 @@
 <!-- Script exclusivo do portal (casca) + o filtro desta página. -->
 <script src="../js/portal.js" defer></script>
 <script src="../js/portal-obrigacoes.js" defer></script>
+<script src="../js/tour-roteiros.js" defer></script>
+<script src="../js/tour.js" defer></script>
 </body>
 </html>

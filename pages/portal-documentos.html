@@ -34,9 +34,10 @@
      toda página do portal. Esta tela não precisa de nada além dela — sem
      CSS exclusivo, então não existe portal-documentos.css. -->
 <link rel="stylesheet" href="../css/portal-shell.css">
+<link rel="stylesheet" href="../css/tour.css">
 </head>
 
-<body>
+<body data-tour="documentos" data-tour-area="cliente">
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 
 <!-- Sprite próprio do portal: mesma cópia usada em portal-inicio.html —
@@ -313,5 +314,7 @@
 
 <!-- Script exclusivo do portal — o mesmo em toda página do portal. -->
 <script src="../js/portal.js" defer></script>
+<script src="../js/tour-roteiros.js" defer></script>
+<script src="../js/tour.js" defer></script>
 </body>
 </html>

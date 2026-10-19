@@ -1825,6 +1825,67 @@ async def api_equipe_atualizar_solicitacao(request: Request, sol_id: str):
     return {"ok": True, "solicitacao": _formatar_detalhe_solicitacao(novo) if novo else None}
 
 
+# --- Tour guiado do Henrique (js/tour.js) -------------------------------
+# Lista fechada: o id vem da página, mas só estes são aceitos.
+TOURS_CLIENTE = {"inicio", "comunicados", "solicitacoes", "documentos", "obrigacoes",
+                 "calendario", "financeiro", "perfil"}
+TOURS_EQUIPE = {"equipe-atendimento", "equipe-comunicados", "equipe-leads"}
+STATUS_TOUR = {"concluido": "concluido", "pulado": "pulado"}
+
+
+def _tours_vistos(tipo: str, conta_id: int) -> list[str]:
+    with obter_conexao() as conexao:
+        return [linha["tour"] for linha in conexao.execute(
+            "SELECT tour FROM tours_vistos WHERE tipo = ? AND conta_id = ?", (tipo, conta_id)
+        )]
+
+
+def _salvar_tour(tipo: str, conta_id: int, tour: str, status: str) -> None:
+    with obter_conexao() as conexao:
+        conexao.execute(
+            """INSERT INTO tours_vistos (tipo, conta_id, tour, status) VALUES (?, ?, ?, ?)
+               ON CONFLICT (tipo, conta_id, tour) DO UPDATE SET status = excluded.status,
+               visto_em = datetime('now')""",
+            (tipo, conta_id, tour, status),
+        )
+
+
+@app.get("/api/tours")
+async def api_tours_cliente(request: Request):
+    if not _tem_sessao(request):
+        return JSONResponse({"erro": "Sessão expirada."}, status_code=401)
+    return {"vistos": await run_in_threadpool(_tours_vistos, "cliente", request.session["usuario_id"])}
+
+
+@app.post("/api/tours/{tour}")
+async def api_salvar_tour_cliente(request: Request, tour: str):
+    if not _tem_sessao(request):
+        return JSONResponse({"erro": "Sessão expirada."}, status_code=401)
+    status = STATUS_TOUR.get(str((await _corpo_json(request)).get("status", "")))
+    if tour not in TOURS_CLIENTE or not status:
+        return JSONResponse({"erro": "Tour inválido."}, status_code=400)
+    await run_in_threadpool(_salvar_tour, "cliente", request.session["usuario_id"], tour, status)
+    return {"ok": True}
+
+
+@app.get("/api/equipe/tours")
+async def api_tours_equipe(request: Request):
+    if not _tem_sessao_equipe(request):
+        return JSONResponse({"erro": "Sessão expirada."}, status_code=401)
+    return {"vistos": await run_in_threadpool(_tours_vistos, "equipe", request.session["funcionario_id"])}
+
+
+@app.post("/api/equipe/tours/{tour}")
+async def api_salvar_tour_equipe(request: Request, tour: str):
+    if not _tem_sessao_equipe(request):
+        return JSONResponse({"erro": "Sessão expirada."}, status_code=401)
+    status = STATUS_TOUR.get(str((await _corpo_json(request)).get("status", "")))
+    if tour not in TOURS_EQUIPE or not status:
+        return JSONResponse({"erro": "Tour inválido."}, status_code=400)
+    await run_in_threadpool(_salvar_tour, "equipe", request.session["funcionario_id"], tour, status)
+    return {"ok": True}
+
+
 # Um app só para os dois domínios: www.facchiniassessoria.com.br é a lead
 # page, portal.facchiniassessoria.com.br cai direto no login.
 def _no_portal(request: Request) -> bool:

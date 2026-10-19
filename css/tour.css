@@ -1,0 +1,165 @@
+/* =============================================================
+   Tour guiado do Henrique (js/tour.js)
+   Abertura e encerramento: o Henrique "sai" da tela e fala.
+   Passos do meio: foco de luz num elemento + balão explicando.
+   ============================================================= */
+.tour { position: fixed; inset: 0; z-index: 3000; font-family: var(--fonte-texto); }
+
+/* ---------- cena em tela cheia ---------- */
+.tour-cena {
+  --mx: 0; --my: 0;
+  position: absolute; inset: 0; overflow: hidden;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: end; gap: clamp(8px, 3vw, 48px);
+  padding-inline: clamp(16px, 6vw, 96px);
+  background:
+    radial-gradient(60% 70% at 28% 100%, rgb(217 164 65 / .28), transparent 70%),
+    radial-gradient(50% 50% at 85% 10%, rgb(39 80 111 / .55), transparent 70%),
+    rgb(6 18 32 / .92);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  animation: tour-fade .35s both;
+  perspective: 1200px;
+}
+.tour-cena__palco {
+  position: relative; align-self: end; height: min(88dvh, 860px); min-height: 360px;
+  display: grid; place-items: end center;
+}
+.tour-cena__halo {
+  position: absolute; inset: 18% 6% 0; border-radius: 50% 50% 0 0;
+  background: radial-gradient(closest-side, rgb(217 164 65 / .35), rgb(217 164 65 / .08) 60%, transparent);
+  transform: translate3d(calc(var(--mx) * 22px), calc(var(--my) * 14px), 0);
+  transition: transform .8s cubic-bezier(.2,.7,.2,1);
+  animation: tour-halo 3.5s ease-in-out infinite alternate;
+}
+.tour-cena__figura {
+  position: relative; margin: 0; height: 100%; display: flex; align-items: flex-end; justify-content: center;
+  transform-origin: 50% 100%;
+  transform: rotateY(calc(var(--mx) * 7deg)) rotateX(calc(var(--my) * -3deg)) translateZ(40px);
+  transition: transform .7s cubic-bezier(.2,.7,.2,1);
+  animation: tour-entra 1s cubic-bezier(.2,1.2,.4,1) both;
+}
+.tour-cena__figura img {
+  height: 100%; width: auto; max-width: 100%; object-fit: contain; object-position: bottom; display: block;
+  /* a foto original corta os braços nas laterais: esmaece só as bordas. A
+     base (corte na cintura) fica escondida pela borda de baixo da tela. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent 100%);
+  filter:
+    drop-shadow(0 0 1px rgb(255 255 255 / .9))
+    drop-shadow(0 0 22px rgb(217 164 65 / .35))
+    drop-shadow(-24px 30px 40px rgb(0 0 0 / .45));
+}
+.tour-cena[data-falando] .tour-cena__figura img { animation: tour-fala .45s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+.tour-cena__festa {
+  position: absolute; right: 10%; top: 12%; z-index: 2; font-size: clamp(40px, 5vw, 64px);
+  animation: tour-pop .6s cubic-bezier(.3,1.6,.5,1) .4s both;
+}
+
+.tour-cena__corpo {
+  display: grid; gap: 22px; align-self: center; position: relative; z-index: 2;
+  padding-bottom: clamp(60px, 12vh, 140px);
+  transform: translate3d(calc(var(--mx) * -10px), calc(var(--my) * -6px), 0);
+  transition: transform .7s cubic-bezier(.2,.7,.2,1);
+}
+.tour-cena__balao {
+  position: relative; padding: clamp(20px, 3vw, 30px) clamp(22px, 3vw, 34px);
+  border-radius: 30px 30px 30px 8px; background: var(--branco); color: var(--tinta);
+  box-shadow: 0 30px 80px -24px rgb(0 0 0 / .6), 0 0 0 1px rgb(217 164 65 / .35);
+  animation: tour-sobe .5s cubic-bezier(.2,1.2,.4,1) .25s both;
+}
+.tour-cena[data-falando] .tour-cena__balao { cursor: pointer; }
+.tour-cena__balao::before {
+  content: ""; position: absolute; left: -10px; bottom: 26px; width: 22px; height: 22px;
+  background: var(--branco); transform: rotate(45deg); border-radius: 3px;
+}
+.tour-cena__texto p { margin: 0 0 .7em; font-size: clamp(1rem, 1.25vw, 1.15rem); line-height: 1.55; }
+.tour-cena__texto p:first-child {
+  font-family: var(--fonte-titulo); font-size: clamp(1.35rem, 2.2vw, 1.85rem); font-weight: 700;
+  line-height: 1.2; color: var(--navy-900); letter-spacing: -.01em;
+}
+.tour-cena__texto p:last-child { margin-bottom: 0; }
+.tour-cursor { display: inline-block; width: 2px; height: 1.05em; margin-left: 2px; vertical-align: -2px; background: var(--ouro); animation: tour-pisca .8s steps(1) infinite; }
+
+.tour-cena__acoes { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; opacity: 0; transform: translateY(8px); transition: opacity .3s, transform .3s; }
+.tour-cena__acoes[data-pronto] { opacity: 1; transform: none; }
+
+/* ---------- foco de luz + balão ---------- */
+.tour-escuro { position: absolute; inset: 0; background: rgb(6 18 32 / .62); animation: tour-fade .25s both; }
+.tour-foco {
+  position: absolute; border-radius: 18px; pointer-events: none;
+  box-shadow: 0 0 0 3px rgb(255 255 255 / .9), 0 0 0 9999px rgb(6 18 32 / .62);
+  transition: top .35s cubic-bezier(.2,.8,.2,1), left .35s cubic-bezier(.2,.8,.2,1), width .35s cubic-bezier(.2,.8,.2,1), height .35s cubic-bezier(.2,.8,.2,1);
+  animation: tour-pulsa 2s ease-in-out infinite;
+}
+.tour-balao {
+  position: absolute; display: grid; gap: 8px; padding: 18px 20px 16px;
+  border-radius: 24px 24px 24px 8px; background: var(--branco); color: var(--tinta);
+  box-shadow: 0 30px 70px -20px rgb(0 0 0 / .55);
+  animation: tour-sobe .35s cubic-bezier(.2,1.2,.4,1) both;
+  transition: top .35s, left .35s, bottom .35s;
+}
+.tour-balao__cabeca { display: flex; align-items: center; gap: 10px; }
+.tour-balao__avatar {
+  width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex: none;
+  box-shadow: 0 0 0 3px var(--branco), 0 0 0 5px var(--ouro);
+  animation: tour-aceno 1.6s ease-in-out .3s 1;
+}
+.tour-nome { flex: 1; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ouro-escuro); }
+.tour-contagem { font-size: .76rem; color: var(--tinta-suave); font-variant-numeric: tabular-nums; }
+.tour-balao h2 { margin: 2px 0 0; font-family: var(--fonte-titulo); font-size: 1.15rem; color: var(--navy-900); letter-spacing: -.01em; }
+.tour-balao p { margin: 0; font-size: .93rem; line-height: 1.55; }
+.tour-pontos { display: flex; gap: 4px; }
+.tour-pontos span { width: 16px; height: 4px; border-radius: 99px; background: var(--borda); transition: background .25s, width .25s; }
+.tour-pontos span[data-feito] { background: rgb(217 164 65 / .45); }
+.tour-pontos span[data-atual] { background: var(--ouro); width: 26px; }
+.tour-balao__acoes { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.tour-espaco { flex: 1; }
+
+/* ---------- botões ---------- */
+.tour-botao {
+  height: 42px; padding: 0 20px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--ouro); color: var(--navy-900); font: 700 .95rem var(--fonte-texto);
+  box-shadow: 0 10px 24px -10px rgb(217 164 65 / .8); transition: transform var(--transicao), background var(--transicao);
+}
+.tour-botao:hover { background: var(--ouro-claro); transform: translateY(-1px); }
+.tour-botao--grande { height: 52px; padding: 0 30px; font-size: 1.02rem; }
+.tour-link { border: 0; background: none; cursor: pointer; padding: 8px 4px; font: 600 .86rem var(--fonte-texto); color: var(--tinta-suave); text-decoration: underline; text-underline-offset: 3px; }
+.tour-link:hover { color: var(--navy-900); }
+.tour-cena .tour-link { color: var(--claro-suave); }
+.tour-cena .tour-link:hover { color: var(--branco); }
+.tour-voltar { border: 1px solid var(--borda); background: var(--branco); height: 42px; padding: 0 16px; border-radius: 999px; cursor: pointer; font: 600 .9rem var(--fonte-texto); color: var(--navy-900); }
+.tour-sair {
+  position: absolute; top: 16px; right: 16px; z-index: 3; border: 0; cursor: pointer; padding: 8px 14px; border-radius: 999px;
+  background: rgb(255 255 255 / .92); color: var(--navy-900); font: 650 .82rem var(--fonte-texto);
+  box-shadow: 0 6px 18px -8px rgb(0 0 0 / .5);
+}
+.tour :focus-visible { outline: 3px solid var(--foco); outline-offset: 3px; }
+
+/* item "Rever tour" injetado no menu do usuário */
+
+.tour-rever-item img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex: none; }
+
+/* ---------- animações ---------- */
+@keyframes tour-fade { from { opacity: 0; } }
+@keyframes tour-entra { from { opacity: 0; transform: translateY(90px) scale(.92) rotateY(-12deg); } }
+@keyframes tour-fala { to { transform: translateY(-4px) scale(1.006); } }
+@keyframes tour-sobe { from { opacity: 0; transform: translateY(12px) scale(.97); } }
+@keyframes tour-halo { to { scale: 1.06; } }
+@keyframes tour-pop { from { scale: 0; rotate: -30deg; } }
+@keyframes tour-pisca { 50% { opacity: 0; } }
+@keyframes tour-pulsa { 50% { box-shadow: 0 0 0 7px rgb(217 164 65 / .8), 0 0 0 9999px rgb(6 18 32 / .62); } }
+@keyframes tour-aceno { 20% { rotate: -10deg; } 40% { rotate: 8deg; } 60% { rotate: -6deg; } 80% { rotate: 3deg; } }
+
+/* ---------- celular: fala em cima, Henrique saindo da borda de baixo ---------- */
+@media (max-width: 760px) {
+  .tour-cena { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); align-items: end; padding: 64px 16px 0; gap: 8px; }
+  .tour-cena__corpo { order: -1; align-self: start; padding-bottom: 0; gap: 14px; }
+  .tour-cena__palco { height: 100%; min-height: 0; align-self: stretch; }
+  .tour-cena__figura img { max-height: 46dvh; }
+  .tour-cena__balao::before { left: 50%; bottom: -10px; margin-left: -11px; }
+  .tour-balao { padding: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour *, .tour { animation: none !important; transition: none !important; }
+}
