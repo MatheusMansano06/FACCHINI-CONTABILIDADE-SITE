@@ -18,7 +18,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, Request, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, Form, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -27,12 +27,20 @@ from starlette.middleware.sessions import SessionMiddleware
 load_dotenv()  # precisa rodar antes de importar acessorias (lê env em cada chamada, mas o token já deve estar carregado)
 
 import acessorias  # noqa: E402
+import email_envio  # noqa: E402
 from auth import (  # noqa: E402
+    TAMANHO_MAXIMO_EMAIL,
     TAMANHO_MINIMO_SENHA,
+    consumir_token_redefinicao,
+    email_da_conta,
+    emitir_token_redefinicao,
     gerar_hash,
-    identificador_bloqueado,
-    limpar_tentativas,
-    registrar_tentativa_falha,
+    limpar_falhas_login,
+    login_bloqueado,
+    redefinicao_bloqueada,
+    registrar_falha_login,
+    registrar_pedido_redefinicao,
+    token_redefinicao_valido,
     verificar_senha,
 )
 from database import inicializar_schema, obter_conexao  # noqa: E402
@@ -101,7 +109,7 @@ def _registrar_acesso(email: str, nome: str, tipo: str) -> None:
     """Item 11 da referência do usuário sobre o Acessórias — histórico de
     acessos não existe na API deles, é 100% nosso. Chamado só depois de
     login bem-sucedido (não registra tentativa falha, isso já é outro
-    mecanismo — auth.registrar_tentativa_falha)."""
+    mecanismo — auth.registrar_falha_login)."""
     with obter_conexao() as conexao:
         conexao.execute(
             "INSERT INTO historico_acessos (email, nome, tipo) VALUES (?, ?, ?)",
@@ -115,10 +123,11 @@ async def login(request: Request):
     email = str(corpo.get("usuario", "")).strip().lower()
     senha = str(corpo.get("senha", ""))
 
-    if not email or not senha:
+    if not email or not senha or len(email) > TAMANHO_MAXIMO_EMAIL:
         return JSONResponse({"erro": "Informe usuário e senha."}, status_code=400)
 
-    if identificador_bloqueado(email):
+    ip = _ip_cliente(request)
+    if login_bloqueado(email, ip):
         return JSONResponse(
             {"erro": "Muitas tentativas. Aguarde alguns minutos e tente de novo."},
             status_code=429,
@@ -129,8 +138,8 @@ async def login(request: Request):
             "SELECT id, nome, senha_hash, deve_trocar_senha FROM usuarios WHERE email = ?", (email,)
         ).fetchone()
 
-        if not usuario or not verificar_senha(senha, usuario["senha_hash"]):
-            registrar_tentativa_falha(email)
+        if not verificar_senha(senha, usuario["senha_hash"] if usuario else None):
+            registrar_falha_login(email, ip)
             return JSONResponse({"erro": "Usuário ou senha incorretos."}, status_code=401)
 
         empresas = [
@@ -141,7 +150,7 @@ async def login(request: Request):
             )
         ]
 
-    limpar_tentativas(email)
+    limpar_falhas_login(email)
     _registrar_acesso(email, usuario["nome"], "cliente")
     deve_trocar_senha = bool(usuario["deve_trocar_senha"])
     request.session["usuario_id"] = usuario["id"]
@@ -167,23 +176,11 @@ async def trocar_senha(request: Request):
     if not _tem_sessao(request):
         return JSONResponse({"erro": "Sessão expirada. Faça login de novo."}, status_code=401)
 
-    corpo = await request.json()
-    nova_senha = str(corpo.get("novaSenha", ""))
-    confirmacao = str(corpo.get("confirmacao", ""))
-
-    if not nova_senha or nova_senha != confirmacao:
-        return JSONResponse({"erro": "As senhas não coincidem."}, status_code=400)
-    if len(nova_senha) < TAMANHO_MINIMO_SENHA:
-        return JSONResponse(
-            {"erro": f"Use uma senha com pelo menos {TAMANHO_MINIMO_SENHA} caracteres."}, status_code=400
-        )
-
-    senha_hash = gerar_hash(nova_senha)
-    with obter_conexao() as conexao:
-        conexao.execute(
-            "UPDATE usuarios SET senha_hash = ?, deve_trocar_senha = 0 WHERE id = ?",
-            (senha_hash, request.session["usuario_id"]),
-        )
+    erro = await _trocar_senha_da_conta(
+        request, "cliente", request.session["usuario_id"], bool(request.session.get("deve_trocar_senha"))
+    )
+    if erro:
+        return erro
 
     # Sem redirecionamento: o cliente continua na mesma página do portal,
     # só o aviso flutuante some. Trocou aqui, não aparece mais em nenhum
@@ -227,10 +224,11 @@ async def equipe_login(request: Request):
     email = str(corpo.get("usuario", "")).strip().lower()
     senha = str(corpo.get("senha", ""))
 
-    if not email or not senha:
+    if not email or not senha or len(email) > TAMANHO_MAXIMO_EMAIL:
         return JSONResponse({"erro": "Informe usuário e senha."}, status_code=400)
 
-    if identificador_bloqueado(email):
+    ip = _ip_cliente(request)
+    if login_bloqueado(email, ip):
         return JSONResponse(
             {"erro": "Muitas tentativas. Aguarde alguns minutos e tente de novo."},
             status_code=429,
@@ -241,11 +239,11 @@ async def equipe_login(request: Request):
             "SELECT id, nome, senha_hash, deve_trocar_senha FROM funcionarios WHERE email = ?", (email,)
         ).fetchone()
 
-    if not funcionario or not verificar_senha(senha, funcionario["senha_hash"]):
-        registrar_tentativa_falha(email)
+    if not verificar_senha(senha, funcionario["senha_hash"] if funcionario else None):
+        registrar_falha_login(email, ip)
         return JSONResponse({"erro": "Usuário ou senha incorretos."}, status_code=401)
 
-    limpar_tentativas(email)
+    limpar_falhas_login(email)
     _registrar_acesso(email, funcionario["nome"], "equipe")
     request.session["funcionario_id"] = funcionario["id"]
     request.session["funcionario_nome"] = funcionario["nome"]
@@ -258,23 +256,14 @@ async def equipe_trocar_senha(request: Request):
     if not _tem_sessao_equipe(request):
         return JSONResponse({"erro": "Sessão expirada. Faça login de novo."}, status_code=401)
 
-    corpo = await request.json()
-    nova_senha = str(corpo.get("novaSenha", ""))
-    confirmacao = str(corpo.get("confirmacao", ""))
-
-    if not nova_senha or nova_senha != confirmacao:
-        return JSONResponse({"erro": "As senhas não coincidem."}, status_code=400)
-    if len(nova_senha) < TAMANHO_MINIMO_SENHA:
-        return JSONResponse(
-            {"erro": f"Use uma senha com pelo menos {TAMANHO_MINIMO_SENHA} caracteres."}, status_code=400
-        )
-
-    senha_hash = gerar_hash(nova_senha)
-    with obter_conexao() as conexao:
-        conexao.execute(
-            "UPDATE funcionarios SET senha_hash = ?, deve_trocar_senha = 0 WHERE id = ?",
-            (senha_hash, request.session["funcionario_id"]),
-        )
+    erro = await _trocar_senha_da_conta(
+        request,
+        "equipe",
+        request.session["funcionario_id"],
+        bool(request.session.get("funcionario_deve_trocar_senha")),
+    )
+    if erro:
+        return erro
 
     request.session["funcionario_deve_trocar_senha"] = False
     return {"ok": True}
@@ -1436,6 +1425,169 @@ async def api_alternar_lead_contatado(request: Request):
     if resultado is None:
         return JSONResponse({"erro": "Lead não encontrado."}, status_code=404)
     return {"ok": True, **resultado}
+
+# --- Senha: troca, "esqueceu sua senha?" e primeiro acesso por e-mail -----
+
+def _ip_cliente(request: Request) -> str:
+    # Atrás do proxy do Railway o uvicorn roda com --proxy-headers, então
+    # request.client.host já é o IP real de quem acessou.
+    return request.client.host if request.client else "desconhecido"
+
+
+async def _corpo_json(request: Request) -> dict:
+    try:
+        corpo = await request.json()
+    except ValueError:
+        return {}
+    return corpo if isinstance(corpo, dict) else {}
+
+
+def _validar_nova_senha(nova_senha: str, confirmacao: str) -> JSONResponse | None:
+    if not nova_senha or nova_senha != confirmacao:
+        return JSONResponse({"erro": "As senhas não coincidem."}, status_code=400)
+    if len(nova_senha) < TAMANHO_MINIMO_SENHA:
+        return JSONResponse(
+            {"erro": f"Use uma senha com pelo menos {TAMANHO_MINIMO_SENHA} caracteres."}, status_code=400
+        )
+    return None
+
+
+async def _trocar_senha_da_conta(
+    request: Request, tipo: str, conta_id: int, troca_obrigatoria_na_sessao: bool
+) -> JSONResponse | None:
+    """Usado por /api/trocar-senha e /api/equipe/trocar-senha. Exige a
+    senha atual, a não ser na troca obrigatória logo depois de entrar com
+    a senha provisória (a pessoa acabou de digitá-la no login). Só conta
+    como troca obrigatória se a sessão E o banco ainda disserem que sim —
+    se a senha já foi trocada por outro caminho (ex.: link do e-mail),
+    uma sessão antiga não ganha passe livre. Devolve a resposta de erro,
+    ou None quando a senha foi trocada."""
+    corpo = await _corpo_json(request)
+    senha_atual = str(corpo.get("senhaAtual", ""))
+    nova_senha = str(corpo.get("novaSenha", ""))
+    confirmacao = str(corpo.get("confirmacao", ""))
+
+    erro = _validar_nova_senha(nova_senha, confirmacao)
+    if erro:
+        return erro
+
+    tabela = "funcionarios" if tipo == "equipe" else "usuarios"
+    with obter_conexao() as conexao:
+        conta = conexao.execute(
+            f"SELECT email, senha_hash, deve_trocar_senha FROM {tabela} WHERE id = ?", (conta_id,)
+        ).fetchone()
+    if not conta:
+        return JSONResponse({"erro": "Sessão expirada. Faça login de novo."}, status_code=401)
+
+    troca_obrigatoria = troca_obrigatoria_na_sessao and bool(conta["deve_trocar_senha"])
+    if not troca_obrigatoria:
+        if not senha_atual:
+            return JSONResponse({"erro": "Informe sua senha atual.", "exigeSenhaAtual": True}, status_code=400)
+        # Mesmo contador do login: uma sessão roubada não vira um jeito de
+        # chutar a senha atual sem limite.
+        ip = _ip_cliente(request)
+        if login_bloqueado(conta["email"], ip):
+            return JSONResponse(
+                {"erro": "Muitas tentativas. Aguarde alguns minutos e tente de novo.", "exigeSenhaAtual": True},
+                status_code=429,
+            )
+        if not verificar_senha(senha_atual, conta["senha_hash"]):
+            registrar_falha_login(conta["email"], ip)
+            return JSONResponse({"erro": "Senha atual incorreta.", "exigeSenhaAtual": True}, status_code=400)
+
+    # Principalmente com a senha provisória comum do lote inicial
+    # (criar_usuarios_em_massa.py --senha-comum): "trocar" pela mesma senha
+    # deixaria a conta aberta pra qualquer outro cliente que a conhece.
+    if verificar_senha(nova_senha, conta["senha_hash"]):
+        return JSONResponse({"erro": "A nova senha precisa ser diferente da atual."}, status_code=400)
+
+    with obter_conexao() as conexao:
+        conexao.execute(
+            f"UPDATE {tabela} SET senha_hash = ?, deve_trocar_senha = 0 WHERE id = ?",
+            (gerar_hash(nova_senha), conta_id),
+        )
+    return None
+
+
+MENSAGEM_REDEFINICAO_NEUTRA = (
+    "Se este e-mail estiver cadastrado no portal, você vai receber em instantes um link "
+    "para definir uma nova senha. Confira também a caixa de spam."
+)
+
+
+def _enviar_link_redefinicao(tipo: str, email: str) -> None:
+    """Roda em segundo plano (BackgroundTasks → threadpool), depois que a
+    resposta já saiu: o tempo de resposta é o mesmo exista a conta ou não,
+    e o SMTP (bloqueante) nunca trava o event loop. Nada aqui vai pro log
+    além de avisos genéricos — nunca o token nem o link."""
+    if not email_envio.smtp_configurado():
+        print("AVISO: pedido de redefinição de senha recebido, mas o SMTP não está configurado "
+              "(SMTP_USUARIO/SMTP_SENHA) — nenhum e-mail foi enviado. Ver backend/.env.example.")
+        return
+    tabela = "funcionarios" if tipo == "equipe" else "usuarios"
+    with obter_conexao() as conexao:
+        conta = conexao.execute(f"SELECT id, email, nome FROM {tabela} WHERE email = ?", (email,)).fetchone()
+    if not conta:
+        return
+    token = emitir_token_redefinicao(tipo, conta["id"])
+    email_envio.enviar_link_redefinicao(conta["email"], conta["nome"], token)
+
+
+@app.post("/api/esqueci-senha")
+async def esqueci_senha(request: Request, tarefas: BackgroundTasks):
+    """Sem autoatendimento de cadastro: isso só manda link pra quem já tem
+    conta criada pelo escritório. A resposta é sempre a mesma, exista o
+    e-mail ou não — não dá pra usar isso pra descobrir quem é cliente."""
+    corpo = await _corpo_json(request)
+    email = str(corpo.get("email", "")).strip().lower()
+    tipo = "equipe" if corpo.get("tipo") == "equipe" else "cliente"
+
+    if not email or "@" not in email or len(email) > TAMANHO_MAXIMO_EMAIL:
+        return JSONResponse({"erro": "Informe um e-mail válido."}, status_code=400)
+
+    ip = _ip_cliente(request)
+    if redefinicao_bloqueada(email, ip):
+        return JSONResponse(
+            {"erro": "Muitos pedidos seguidos. Aguarde um pouco e tente de novo."}, status_code=429
+        )
+    registrar_pedido_redefinicao(email, ip)
+
+    tarefas.add_task(_enviar_link_redefinicao, tipo, email)
+    return {"ok": True, "mensagem": MENSAGEM_REDEFINICAO_NEUTRA}
+
+
+@app.post("/api/redefinir-senha/validar")
+async def validar_link_redefinicao(request: Request):
+    """Só pra página avisar logo de cara que o link expirou, em vez de
+    deixar a pessoa digitar a senha nova duas vezes à toa."""
+    corpo = await _corpo_json(request)
+    return {"valido": token_redefinicao_valido(str(corpo.get("token", "")))}
+
+
+@app.post("/api/redefinir-senha")
+async def redefinir_senha(request: Request):
+    corpo = await _corpo_json(request)
+    token = str(corpo.get("token", ""))
+    nova_senha = str(corpo.get("novaSenha", ""))
+    confirmacao = str(corpo.get("confirmacao", ""))
+
+    erro = _validar_nova_senha(nova_senha, confirmacao)
+    if erro:
+        return erro
+
+    resultado = consumir_token_redefinicao(token, nova_senha)
+    if not resultado:
+        return JSONResponse(
+            {"erro": "Este link é inválido, já foi usado ou expirou. Peça um novo.", "linkInvalido": True},
+            status_code=400,
+        )
+
+    tipo, conta_id = resultado
+    email = email_da_conta(tipo, conta_id)
+    if email:
+        # Provou que é dono da caixa de e-mail — destrava o login dele.
+        limpar_falhas_login(email)
+    return {"ok": True, "destino": "equipe-login.html" if tipo == "equipe" else "login.html"}
 
 
 # Um app só para os dois domínios: www.facchiniassessoria.com.br é a lead

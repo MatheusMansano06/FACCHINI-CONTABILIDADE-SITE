@@ -6,9 +6,20 @@ contato em alguma empresa na Acessórias. Não bate na API de novo: os
 dados já foram puxados quando o índice foi gerado, então isso só
 materializa login local a partir do que já está em contatos_acessorias.
 
-Cada conta nova recebe sua própria senha temporária aleatória (nunca uma
-senha fixa compartilhada) e troca obrigatória no primeiro acesso — mesma
-regra já usada em create_user.py e criar_funcionario.py, só que em lote.
+Por padrão cada conta nova recebe sua própria senha temporária aleatória
+e troca obrigatória no primeiro acesso — mesma regra já usada em
+create_user.py e criar_funcionario.py, só que em lote. As senhas geradas
+são impressas no fim, pra repassar a cada cliente.
+
+Com --senha-comum, todas as contas NOVAS desta execução recebem uma mesma
+senha provisória, digitada na hora (getpass, duas vezes, nunca aparece na
+tela nem fica no código ou no histórico do terminal) — o escritório comunica
+essa senha aos clientes e cada um é obrigado a trocar no primeiro acesso
+(deve_trocar_senha = 1; o portal não aceita "trocar" pela mesma senha).
+Enquanto um cliente não troca, qualquer pessoa que saiba a senha comum e o
+e-mail dele entra na conta — por isso vale avisar a todos pra trocar logo,
+ou mandar o link de "Esqueceu sua senha?" (primeiro acesso por e-mail).
+Contas que já existiam não são tocadas, com ou sem a opção.
 
 Seguro rodar de novo: nunca sobrescreve um login que já existe (login
 manual continua com a senha que tiver), só cria o que falta e sempre
@@ -16,20 +27,25 @@ revincula TODAS as empresas encontradas pro mesmo e-mail no índice.
 
 Uso:
     cd backend
-    python3 criar_usuarios_em_massa.py
+    python3 criar_usuarios_em_massa.py                 # senha aleatória por conta
+    python3 criar_usuarios_em_massa.py --senha-comum   # uma senha provisória pra todas as novas
 """
+import argparse
 import asyncio
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from auth import gerar_hash, gerar_senha_temporaria  # noqa: E402
+from auth import gerar_hash, gerar_senha_temporaria, ler_senha_confirmada  # noqa: E402
 from database import inicializar_schema, obter_conexao  # noqa: E402
 
 
-async def main() -> None:
+async def main(senha_comum: str | None = None) -> None:
     inicializar_schema()
+    # Um hash só pra senha comum: bcrypt já embute um salt aleatório, e
+    # gerar um por conta só deixaria o lote centenas de vezes mais lento.
+    hash_senha_comum = gerar_hash(senha_comum) if senha_comum else None
 
     with obter_conexao() as conexao:
         linhas = conexao.execute(
@@ -55,11 +71,15 @@ async def main() -> None:
                 usuario_id = existente["id"]
                 ja_existiam += 1
             else:
-                senha_temporaria = gerar_senha_temporaria()
-                senhas_geradas[email] = senha_temporaria
+                if hash_senha_comum:
+                    senha_hash = hash_senha_comum
+                else:
+                    senha_temporaria = gerar_senha_temporaria()
+                    senhas_geradas[email] = senha_temporaria
+                    senha_hash = gerar_hash(senha_temporaria)
                 cursor = conexao.execute(
-                    "INSERT INTO usuarios (email, senha_hash, nome) VALUES (?, ?, ?)",
-                    (email, gerar_hash(senha_temporaria), dados["nome"]),
+                    "INSERT INTO usuarios (email, senha_hash, nome, deve_trocar_senha) VALUES (?, ?, ?, 1)",
+                    (email, senha_hash, dados["nome"]),
                 )
                 usuario_id = cursor.lastrowid
                 criados += 1
@@ -81,7 +101,25 @@ async def main() -> None:
         print("Senha temporária de cada conta nova (troca obrigatória no primeiro acesso):")
         for email, senha in senhas_geradas.items():
             print(f"  {email}: {senha}")
+    elif hash_senha_comum and criados:
+        print("Todas as contas novas usam a senha provisória comum digitada agora "
+              "(troca obrigatória no primeiro acesso).")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    parser = argparse.ArgumentParser(description="Cria login pra todo cliente do índice local de contatos.")
+    parser.add_argument(
+        "--senha-comum",
+        action="store_true",
+        help="pede (sem mostrar na tela) uma senha provisória única pra todas as contas novas",
+    )
+    argumentos = parser.parse_args()
+
+    senha_comum = None
+    if argumentos.senha_comum:
+        print("Senha provisória comum para todas as contas NOVAS (troca obrigatória no primeiro acesso).")
+        senha_comum = ler_senha_confirmada("Senha provisória")
+        if not senha_comum:
+            raise SystemExit(1)
+
+    asyncio.run(main(senha_comum))
