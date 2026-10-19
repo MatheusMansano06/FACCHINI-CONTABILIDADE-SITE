@@ -111,3 +111,31 @@ def inicializar_schema() -> None:
                 UNIQUE (identificador_acessorias, vencimento, valor, competencia)
             )
         """)
+
+        # Comunicados do escritório pros clientes — a API da Acessórias não
+        # tem nada de avisos/notícias (conferido na documentação oficial),
+        # então é 100% nosso, publicado pela equipe em
+        # pages/equipe-comunicados.html. empresa_digitos NULL = vale pra
+        # todos os clientes; preenchido = só aquela empresa. Guarda só os
+        # dígitos do CNPJ/CPF porque usuario_empresas guarda formatado
+        # ("12.345.678/0001-90") e a equipe pode digitar de qualquer jeito —
+        # comparar só dígitos dos dois lados evita "não achou" por pontuação.
+        # Remover é lógico (removido_em), não DELETE: fica o histórico de
+        # quem publicou o quê, caso um cliente pergunte depois.
+        conexao.execute("""
+            CREATE TABLE IF NOT EXISTS comunicados (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                titulo TEXT NOT NULL,
+                texto TEXT NOT NULL,
+                categoria TEXT NOT NULL CHECK (categoria IN ('comunicado', 'informativo', 'institucional')),
+                empresa_digitos TEXT,
+                empresa_nome TEXT,
+                autor_funcionario_id INTEGER,
+                autor_nome TEXT NOT NULL,
+                criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+                removido_em TEXT
+            )
+        """)
+        conexao.execute(
+            "CREATE INDEX IF NOT EXISTS idx_comunicados_empresa ON comunicados (empresa_digitos, removido_em)"
+        )

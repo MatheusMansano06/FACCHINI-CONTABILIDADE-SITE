@@ -942,6 +942,233 @@ class ArquivosEstaticos(StaticFiles):
         return resposta
 
 
+# --- Comunicados (escritório -> clientes) ---------------------------------
+# A Acessórias não tem nenhum recurso de avisos/notícias (conferido na
+# documentação oficial da API), então isto é 100% local — tabela
+# comunicados em database.py. A equipe publica/remove em
+# pages/equipe-comunicados.html; o cliente vê em portal-comunicados.html
+# e os 3 mais recentes no card "Novidades" do Início.
+#
+# Regra de segurança: o cliente só enxerga comunicados gerais (sem
+# empresa) ou da empresa_ativa DA SESSÃO — nunca de um identificador vindo
+# da requisição. Escrita só com sessão de equipe.
+import re  # noqa: E402
+from datetime import timedelta, timezone  # noqa: E402
+
+CATEGORIAS_COMUNICADO = {
+    "comunicado": "Comunicado",
+    "informativo": "Informativo",
+    "institucional": "Institucional",
+}
+TITULO_COMUNICADO_MAX = 120
+TEXTO_COMUNICADO_MAX = 3000
+# Brasil não tem horário de verão desde 2019 — offset fixo evita depender
+# do pacote tzdata no container só por causa disto.
+_FUSO_BRASILIA = timezone(timedelta(hours=-3))
+_MESES_EXTENSO = [
+    "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+]
+
+
+def _somente_digitos(texto: str | None) -> str:
+    return re.sub(r"\D", "", texto or "")
+
+
+def _formatar_comunicado(linha) -> dict:
+    # criado_em vem do datetime('now') do SQLite, ou seja, em UTC.
+    try:
+        momento = datetime.strptime(linha["criado_em"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        local = momento.astimezone(_FUSO_BRASILIA)
+        data_extenso = f"{local.day:02d} de {_MESES_EXTENSO[local.month - 1]} de {local.year}"
+        data_iso = local.date().isoformat()
+    except (ValueError, TypeError):
+        data_extenso, data_iso = "", ""
+    return {
+        "id": linha["id"],
+        "titulo": linha["titulo"],
+        "texto": linha["texto"],
+        "categoria": linha["categoria"],
+        "categoria_nome": CATEGORIAS_COMUNICADO.get(linha["categoria"], "Comunicado"),
+        "exclusivo": bool(linha["empresa_digitos"]),
+        "empresa_nome": linha["empresa_nome"] or "",
+        "autor_nome": linha["autor_nome"],
+        "data": data_extenso,
+        "data_iso": data_iso,
+    }
+
+
+def _comunicados_do_cliente(request: Request, limite: int = 50) -> list[dict]:
+    digitos = _somente_digitos(_identificador_ativo(request))
+    with obter_conexao() as conexao:
+        linhas = conexao.execute(
+            """SELECT id, titulo, texto, categoria, empresa_digitos, empresa_nome, autor_nome, criado_em
+               FROM comunicados
+               WHERE removido_em IS NULL
+                 AND (empresa_digitos IS NULL OR (? != '' AND empresa_digitos = ?))
+               ORDER BY criado_em DESC, id DESC
+               LIMIT ?""",
+            (digitos, digitos, limite),
+        ).fetchall()
+    return [_formatar_comunicado(linha) for linha in linhas]
+
+
+def _comunicados_recentes_template(request: Request, limite: int = 3) -> list[dict]:
+    """Exposto ao Jinja como global (comunicados_recentes) pro card
+    "Novidades" do Início — assim o Início ganha os comunicados sem mexer
+    em _montar_contexto_inicio. Leitura local no SQLite, sem rede; sem
+    sessão de cliente não devolve nada."""
+    if not _tem_sessao(request):
+        return []
+    return _comunicados_do_cliente(request, limite)
+
+
+templates.env.globals["comunicados_recentes"] = _comunicados_recentes_template
+
+
+@app.get("/pages/portal-comunicados.html")
+async def pagina_portal_comunicados(request: Request):
+    guarda = _guarda_portal(request)
+    if guarda:
+        return guarda
+    identificador = _identificador_ativo(request)
+    # Única chamada à Acessórias aqui (cabeçalho), já cacheada por _get;
+    # os comunicados em si são locais.
+    empresa_dados = await acessorias.buscar_empresa(identificador) if identificador else None
+    contexto = _cabecalho(request, empresa_dados, identificador)
+    contexto["comunicados"] = _comunicados_do_cliente(request)
+    return templates.TemplateResponse(request, "portal-comunicados.html", contexto)
+
+
+@app.get("/pages/equipe-comunicados.html")
+async def pagina_equipe_comunicados(request: Request):
+    guarda = _guarda_equipe(request)
+    if guarda:
+        return guarda
+    with obter_conexao() as conexao:
+        linhas = conexao.execute(
+            """SELECT id, titulo, texto, categoria, empresa_digitos, empresa_nome, autor_nome, criado_em
+               FROM comunicados WHERE removido_em IS NULL
+               ORDER BY criado_em DESC, id DESC LIMIT 200"""
+        ).fetchall()
+        # Sugestões pro campo de empresa: só quem tem login no portal
+        # (consulta local, sem nenhuma chamada por empresa à Acessórias).
+        empresas_portal = [
+            linha["identificador_acessorias"]
+            for linha in conexao.execute(
+                "SELECT DISTINCT identificador_acessorias FROM usuario_empresas ORDER BY identificador_acessorias"
+            )
+        ]
+    return templates.TemplateResponse(
+        request,
+        "equipe-comunicados.html",
+        {
+            "nome_usuario": request.session.get("funcionario_nome", "equipe"),
+            "deve_trocar_senha": bool(request.session.get("funcionario_deve_trocar_senha")),
+            "comunicados": [_formatar_comunicado(linha) for linha in linhas],
+            "empresas_portal": empresas_portal,
+            "categorias": CATEGORIAS_COMUNICADO,
+            "titulo_max": TITULO_COMUNICADO_MAX,
+            "texto_max": TEXTO_COMUNICADO_MAX,
+        },
+    )
+
+
+def _e_json(request: Request) -> bool:
+    # Exige Content-Type JSON: um <form> de outro site não consegue mandar
+    # isso sem preflight de CORS — defesa extra além do SameSite=lax.
+    return request.headers.get("content-type", "").split(";")[0].strip() == "application/json"
+
+
+@app.post("/api/equipe/comunicados")
+async def api_publicar_comunicado(request: Request):
+    if not _tem_sessao_equipe(request):
+        return JSONResponse({"erro": "Sessão expirada. Faça login de novo."}, status_code=401)
+    if not _e_json(request):
+        return JSONResponse({"erro": "Formato inválido."}, status_code=415)
+    try:
+        corpo = await request.json()
+    except ValueError:
+        return JSONResponse({"erro": "Formato inválido."}, status_code=400)
+    if not isinstance(corpo, dict):
+        return JSONResponse({"erro": "Formato inválido."}, status_code=400)
+
+    titulo = " ".join(str(corpo.get("titulo", "")).split())
+    texto = str(corpo.get("texto", "")).replace("\r\n", "\n").strip()
+    categoria = str(corpo.get("categoria", ""))
+    destino = str(corpo.get("destino", "todos"))
+    empresa = str(corpo.get("empresa", "")).strip()
+
+    if len(titulo) < 3 or len(titulo) > TITULO_COMUNICADO_MAX:
+        return JSONResponse(
+            {"erro": f"O título precisa ter entre 3 e {TITULO_COMUNICADO_MAX} caracteres."}, status_code=400
+        )
+    if not texto or len(texto) > TEXTO_COMUNICADO_MAX:
+        return JSONResponse(
+            {"erro": f"Escreva o texto do comunicado (até {TEXTO_COMUNICADO_MAX} caracteres)."}, status_code=400
+        )
+    if categoria not in CATEGORIAS_COMUNICADO:
+        return JSONResponse({"erro": "Categoria inválida."}, status_code=400)
+    if destino not in ("todos", "empresa"):
+        return JSONResponse({"erro": "Destino inválido."}, status_code=400)
+
+    empresa_digitos = None
+    empresa_nome = None
+    if destino == "empresa":
+        empresa_digitos = _somente_digitos(empresa)
+        if len(empresa_digitos) not in (11, 14):
+            return JSONResponse({"erro": "Informe um CNPJ (14 dígitos) ou CPF (11 dígitos) válido."}, status_code=400)
+        dados = await acessorias.buscar_empresa(empresa_digitos)
+        if dados:
+            empresa_nome = dados.get("Fantasia") or dados.get("Razao") or dados.get("Identificador")
+        else:
+            # Acessórias fora do ar ou empresa inexistente: só aceita se a
+            # empresa tiver login no portal (senão ninguém veria o aviso).
+            with obter_conexao() as conexao:
+                conhecidas = {
+                    _somente_digitos(linha["identificador_acessorias"])
+                    for linha in conexao.execute("SELECT DISTINCT identificador_acessorias FROM usuario_empresas")
+                }
+            if empresa_digitos not in conhecidas:
+                return JSONResponse({"erro": "Empresa não encontrada na Acessórias."}, status_code=400)
+            empresa_nome = empresa
+        empresa_nome = (empresa_nome or "")[:200]
+
+    with obter_conexao() as conexao:
+        cursor = conexao.execute(
+            """INSERT INTO comunicados
+                   (titulo, texto, categoria, empresa_digitos, empresa_nome, autor_funcionario_id, autor_nome)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (
+                titulo, texto, categoria, empresa_digitos, empresa_nome,
+                request.session["funcionario_id"], request.session.get("funcionario_nome", "Equipe"),
+            ),
+        )
+    return {"ok": True, "id": cursor.lastrowid}
+
+
+@app.post("/api/equipe/comunicados/remover")
+async def api_remover_comunicado(request: Request):
+    if not _tem_sessao_equipe(request):
+        return JSONResponse({"erro": "Sessão expirada. Faça login de novo."}, status_code=401)
+    if not _e_json(request):
+        return JSONResponse({"erro": "Formato inválido."}, status_code=415)
+    try:
+        corpo = await request.json()
+        comunicado_id = int(corpo.get("id"))
+    except (ValueError, TypeError, AttributeError):
+        return JSONResponse({"erro": "Comunicado inválido."}, status_code=400)
+
+    with obter_conexao() as conexao:
+        cursor = conexao.execute(
+            "UPDATE comunicados SET removido_em = datetime('now') WHERE id = ? AND removido_em IS NULL",
+            (comunicado_id,),
+        )
+    if cursor.rowcount == 0:
+        return JSONResponse({"erro": "Comunicado não encontrado (talvez já removido)."}, status_code=404)
+    return {"ok": True}
+
+
 # Um app só para os dois domínios: www.facchiniassessoria.com.br é a lead
 # page, portal.facchiniassessoria.com.br cai direto no login.
 def _no_portal(request: Request) -> bool:

@@ -44,4 +44,21 @@ function iniciarFormularioSolicitacao() {
   });
 }
 
+/* Atalhos do Início chegam aqui com ?assunto=<chave> (ex.: "Enviar
+   documentos"). Só chaves conhecidas viram texto — nunca o valor cru
+   da URL — e só preenche se o campo ainda estiver vazio. */
+const ASSUNTOS_PRONTOS = {
+  documentos: 'Envio de documentos',
+};
+
+function preencherAssuntoDaUrl() {
+  const chave = new URLSearchParams(window.location.search).get('assunto');
+  const texto = chave && Object.hasOwn(ASSUNTOS_PRONTOS, chave) ? ASSUNTOS_PRONTOS[chave] : null;
+  const campo = document.getElementById('sol-assunto');
+  if (!texto || !campo || campo.value) return;
+  campo.value = texto;
+  document.getElementById('sol-descricao')?.focus({ preventScroll: true });
+}
+
 iniciarFormularioSolicitacao();
+preencherAssuntoDaUrl();

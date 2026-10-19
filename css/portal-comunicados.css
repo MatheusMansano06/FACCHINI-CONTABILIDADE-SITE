@@ -1,0 +1,148 @@
+/* =============================================================
+   COMUNICADOS — lista de comunicados do escritório.
+   Usado por pages/portal-comunicados.html (cliente lê) e por
+   pages/equipe-comunicados.html (equipe publica/remove). Só soma
+   componentes novos; não redefine nada de portal-shell.css.
+   ============================================================= */
+
+.lista-comunicados {
+  display: grid;
+  gap: var(--e-3);
+}
+
+.comunicado {
+  padding: var(--e-4);
+  background: var(--osso);
+  border: 1px solid var(--borda);
+  border-left: 3px solid var(--ouro);
+  border-radius: var(--raio-sm);
+  /* Âncora vinda do Início (#comunicado-N): não esconder sob o topo. */
+  scroll-margin-top: var(--e-4);
+}
+.comunicado:target { background: var(--branco); box-shadow: 0 0 0 3px rgb(217 164 65 / 0.22); }
+
+.comunicado__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e-2);
+  font-size: var(--t-xs);
+  color: var(--tinta-suave);
+}
+
+.comunicado__categoria,
+.comunicado__exclusivo {
+  padding: 0.15rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: var(--raio-sm);
+  color: var(--navy-900);
+}
+.comunicado__categoria--comunicado { background: var(--ouro); }
+.comunicado__categoria--informativo { background: rgb(29 111 165 / 0.14); color: #1D6FA5; }
+.comunicado__categoria--institucional { background: var(--osso-fundo); }
+.comunicado__exclusivo { background: rgb(43 138 88 / 0.12); color: #1E8449; }
+
+.comunicado__titulo {
+  margin-top: var(--e-2);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--navy-900);
+}
+
+.comunicado__texto {
+  margin-top: var(--e-1);
+  font-size: var(--t-xs);
+  line-height: 1.55;
+  color: var(--tinta);
+  /* Quebras de linha digitadas pela equipe aparecem como linhas, sem
+     precisar montar HTML no servidor (o texto sai sempre escapado). */
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.comunicado__autor {
+  margin-top: var(--e-2);
+  font-size: 0.68rem;
+  color: var(--tinta-suave);
+}
+
+/* ----------------------------- rodapé de ajuda (cliente) ----------------------------- */
+.ajuda-comunicados {
+  padding: 0.9rem 1.1rem;
+  background: linear-gradient(140deg, var(--navy-800), var(--navy-950));
+  border-radius: var(--raio);
+  color: var(--claro-suave);
+}
+.ajuda-comunicados h2 { font-size: var(--t-sm); font-weight: 700; color: var(--branco); }
+.ajuda-comunicados p { margin-top: 0.2rem; font-size: var(--t-xs); }
+.ajuda-comunicados__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e-2);
+  margin-top: var(--e-3);
+}
+.ajuda-comunicados .botao { padding: 0.5rem 1rem; font-size: var(--t-xs); }
+
+/* ----------------------------- painel da equipe ----------------------------- */
+.formulario-comunicado {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-4);
+  max-width: 40rem;
+}
+
+.formulario-comunicado__destino {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e-2) var(--e-4);
+  padding: 0;
+  border: 0;
+  font-size: var(--t-xs);
+  color: var(--tinta);
+}
+.formulario-comunicado__destino legend {
+  margin-bottom: var(--e-2);
+  font-weight: 500;
+  color: var(--navy-900);
+}
+.formulario-comunicado__destino label { display: inline-flex; align-items: center; gap: 0.35rem; }
+
+.formulario-comunicado__contador {
+  font-size: 0.68rem;
+  color: var(--tinta-suave);
+  text-align: right;
+}
+
+.comunicado__acoes {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--e-2);
+}
+
+.botao-remover {
+  padding: 0.3rem 0.75rem;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: #B3261E;
+  background: var(--branco);
+  border: 1px solid rgb(179 38 30 / 0.35);
+  border-radius: var(--raio-pill);
+  transition: background-color var(--transicao);
+}
+.botao-remover:hover { background: rgb(179 38 30 / 0.08); }
+.botao-remover:disabled { opacity: 0.6; cursor: progress; }
+
+.retorno-formulario {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  color: #1E8449;
+}
+.retorno-formulario:empty { display: none; }
+.retorno-formulario.esta-erro { color: #B3261E; }
+
+/* .campo usa display:grid, que empata com o [hidden] nativo e venceria —
+   o campo de empresa precisa sumir de verdade quando o destino é "todos". */
+.formulario-comunicado [hidden] { display: none; }
