@@ -134,7 +134,7 @@ banco local tem contas criadas com a antiga senha padrão fixa.
 | `www.facchiniassessoria.com.br` | `CNAME www → 2ytu9q4f.up.railway.app` + `TXT _railway-verify.www` |
 
 Os TXT `_railway-verify.*` provam ao Railway que o domínio é nosso — não
-apagar. O certificado HTTPS é emitido e renovado pelo Railway. Se ele travar
+apagar. Também ficam na zona (não apagar): o TXT `google-site-verification=...` na raiz (verificação do Google Search Console, feita em 19/10/2026) e os registros do Resend (`TXT resend._domainkey`, `CNAME rsend`, `CNAME send`). O certificado HTTPS é emitido e renovado pelo Railway. Se ele travar
 em "issuing" ou falhar com erro interno, peça uma nova emissão (no painel do
 domínio no Railway, ou pela API) — o do `www` precisou de duas tentativas.
 
