@@ -40,7 +40,6 @@ inteira é melhor do que suavizar a resposta.
 | `index.html` | "+16 anos" e "+1.000 empresas" — confirmar se seguem corretos |
 | `index.html` | JSON-LD: endereço completo (hoje só cidade/UF) |
 | `pages/politica-de-privacidade.html` | Versão **provisória**: revisar com o jurídico e completar CNPJ e endereço |
-| Railway | `SMTP_USUARIO`/`SMTP_SENHA` — sem eles, "Esqueceu sua senha?" não envia e-mail (seção 3) |
 
 Já resolvido: domínio real em canonical/Open Graph/`robots.txt`/`sitemap.xml`,
 e-mail de contato (`contato@facchiniassessoria.com.br`), WhatsApp e Instagram.
@@ -108,7 +107,9 @@ Sobe a pasta respeitando o `.gitignore` (nunca envia `.env`, banco, `venv` ou
 | `ENV` | `production` — cookie só via HTTPS e cabeçalho HSTS |
 | `FACCHINI_DB_PATH` | `/data/facchini.db` — o banco fica no volume |
 | `PORT` | `8080` — mesma porta configurada nos domínios |
-| `SMTP_USUARIO`, `SMTP_SENHA` | Caixa que envia os e-mails de "Esqueceu sua senha?" (ex.: `notificacao@facchiniassessoria.com.br`). Opcionais, com padrão: `SMTP_HOST` (`email-ssl.com.br`), `SMTP_PORT` (`465`), `EMAIL_REMETENTE`, `URL_PORTAL` |
+| `RESEND_API_KEY` | Chave (só envio) da API do **Resend**, que manda os e-mails de "Esqueceu sua senha?". O Railway bloqueia SMTP de saída no plano Hobby, por isso o envio é por API. Domínio verificado no Resend com 3 registros DNS na Locaweb: `TXT resend._domainkey`, `CNAME rsend`, `CNAME send` |
+| `EMAIL_REMETENTE` | `portal@facchiniassessoria.com.br` (caixa criada só pro site) |
+| `SMTP_USUARIO`, `SMTP_SENHA` | Alternativa ao Resend (só funciona no plano Pro do Railway). Opcionais: `SMTP_HOST`, `SMTP_PORT`, `URL_PORTAL` |
 
 Segredos são definidos por quem tem o valor, direto no terminal, sem exibi-lo:
 
