@@ -141,7 +141,7 @@ async function carregarDetalhe(detalhe, solId) {
     });
     const dados = await resposta.json().catch(() => ({}));
     if (resposta.status === 401) {
-      window.location.href = '/pages/equipe-login.html';
+      window.location.href = '/pages/login.html';
       return;
     }
     if (!resposta.ok || !dados.solicitacao) {
@@ -191,7 +191,7 @@ function ligarFormulario(detalhe, linha, solId) {
       const dados = await resposta.json().catch(() => ({}));
 
       if (resposta.status === 401) {
-        window.location.href = '/pages/equipe-login.html';
+        window.location.href = '/pages/login.html';
         return;
       }
       if (!resposta.ok) {

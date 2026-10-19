@@ -8,7 +8,7 @@
 const TAMANHO_MINIMO = 8;
 const DA_EQUIPE = new URLSearchParams(window.location.search).has('equipe');
 const ENDPOINT = DA_EQUIPE ? '/api/equipe/trocar-senha' : '/api/trocar-senha';
-const LOGIN = DA_EQUIPE ? 'equipe-login.html' : 'login.html';
+const LOGIN = 'login.html';
 const DESTINOS_PERMITIDOS = DA_EQUIPE
   ? ['equipe-atendimento.html']
   : ['portal-inicio.html', 'selecionar-empresa.html'];

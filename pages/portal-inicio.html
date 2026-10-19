@@ -275,6 +275,11 @@
           {% endif %}
           <!-- Link comum de verdade (não JS): /logout encerra a sessão no
                servidor e redireciona para o login. Funciona sem JavaScript. -->
+          {% if request.session.get("funcionario_id") %}
+          <a role="menuitem" href="equipe-atendimento.html">
+            <svg class="icone" aria-hidden="true"><use href="#i-atendimentos"/></svg> Painel da equipe
+          </a>
+          {% endif %}
           <a role="menuitem" href="/logout">
             <svg class="icone" aria-hidden="true"><use href="#i-fechar"/></svg> Sair
           </a>

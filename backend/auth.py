@@ -181,10 +181,16 @@ def consumir_token_redefinicao(token: str, nova_senha: str) -> tuple[str, int] |
         if apagado.rowcount != 1:
             return None
         tabela = TABELA_POR_TIPO[linha["tipo"]]  # nome vem do dicionário fixo, nunca do usuário
-        conexao.execute(
-            f"UPDATE {tabela} SET senha_hash = ?, deve_trocar_senha = 0 WHERE id = ?",
-            (senha_hash, linha["conta_id"]),
-        )
+        dono = conexao.execute(f"SELECT email FROM {tabela} WHERE id = ?", (linha["conta_id"],)).fetchone()
+        if not dono:
+            return None
+        # Uma senha por e-mail: conta de cliente e de equipe da mesma pessoa
+        # mudam juntas (login único em pages/login.html).
+        for tabela_conta in TABELA_POR_TIPO.values():
+            conexao.execute(
+                f"UPDATE {tabela_conta} SET senha_hash = ?, deve_trocar_senha = 0 WHERE email = ?",
+                (senha_hash, dono["email"]),
+            )
         # Qualquer outro link pendente da mesma conta também morre aqui.
         conexao.execute(
             "DELETE FROM tokens_redefinicao_senha WHERE tipo = ? AND conta_id = ?",

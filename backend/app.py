@@ -77,7 +77,7 @@ app = FastAPI()
 ROTAS_LIVRES_TROCA = {
     "/api/login", "/api/trocar-senha", "/api/esqueci-senha", "/api/redefinir-senha",
     "/api/redefinir-senha/validar", "/api/contato",
-    "/pages/equipe-login.html", "/api/equipe/login", "/api/equipe/trocar-senha",
+    "/pages/equipe-login.html", "/api/equipe/trocar-senha",
 }
 
 
@@ -164,7 +164,11 @@ def _registrar_acesso(email: str, nome: str, tipo: str) -> None:
 
 @app.post("/api/login")
 async def login(request: Request):
-    corpo = await request.json()
+    """Porta única do portal: a mesma tela serve cliente e equipe. A senha
+    é conferida nas duas tabelas — funcionário vai pro painel da equipe,
+    cliente pro portal. Quem é as duas coisas com o mesmo e-mail (ex.: o
+    Henrique) entra nas duas de uma vez e alterna pelo menu do usuário."""
+    corpo = await _corpo_json(request)
     email = str(corpo.get("usuario", "")).strip().lower()
     senha = str(corpo.get("senha", ""))
 
@@ -182,36 +186,53 @@ async def login(request: Request):
         usuario = conexao.execute(
             "SELECT id, nome, senha_hash, deve_trocar_senha FROM usuarios WHERE email = ?", (email,)
         ).fetchone()
+        funcionario = conexao.execute(
+            "SELECT id, nome, senha_hash, deve_trocar_senha FROM funcionarios WHERE email = ?", (email,)
+        ).fetchone()
 
-        if not await run_in_threadpool(verificar_senha, senha, usuario["senha_hash"] if usuario else None):
-            registrar_falha_login(email, ip)
-            return JSONResponse({"erro": "Usuário ou senha incorretos."}, status_code=401)
-
-        empresas = [
-            linha["identificador_acessorias"]
-            for linha in conexao.execute(
-                "SELECT identificador_acessorias FROM usuario_empresas WHERE usuario_id = ? ORDER BY id",
-                (usuario["id"],),
-            )
-        ]
+    # Sempre as duas verificações (com hash fictício quando a conta não
+    # existe): o tempo de resposta não revela se o e-mail é de cliente,
+    # de equipe ou de ninguém.
+    cliente_ok, equipe_ok = await asyncio.gather(
+        run_in_threadpool(verificar_senha, senha, usuario["senha_hash"] if usuario else None),
+        run_in_threadpool(verificar_senha, senha, funcionario["senha_hash"] if funcionario else None),
+    )
+    if not cliente_ok and not equipe_ok:
+        registrar_falha_login(email, ip)
+        return JSONResponse({"erro": "Usuário ou senha incorretos."}, status_code=401)
 
     limpar_falhas_login(email)
-    _registrar_acesso(email, usuario["nome"], "cliente")
-    deve_trocar_senha = bool(usuario["deve_trocar_senha"])
-    request.session["usuario_id"] = usuario["id"]
-    request.session["nome"] = usuario["nome"]
-    request.session["empresas"] = empresas
-    request.session["deve_trocar_senha"] = deve_trocar_senha
+    # Sessão nova a cada login: nunca mistura com a de outra pessoa que
+    # tenha usado o mesmo navegador antes.
+    request.session.clear()
 
-    # Uma empresa só: entra direto nela, sem tela extra. Mais de uma: cai
-    # numa tela de escolha primeiro (mesmo padrão da própria Acessórias) —
-    # empresa_ativa fica vazia até o cliente escolher.
-    if len(empresas) == 1:
-        request.session["empresa_ativa"] = empresas[0]
-    else:
-        request.session["empresa_ativa"] = None
+    if cliente_ok:
+        with obter_conexao() as conexao:
+            empresas = [
+                linha["identificador_acessorias"]
+                for linha in conexao.execute(
+                    "SELECT identificador_acessorias FROM usuario_empresas WHERE usuario_id = ? ORDER BY id",
+                    (usuario["id"],),
+                )
+            ]
+        _registrar_acesso(email, usuario["nome"], "cliente")
+        request.session["usuario_id"] = usuario["id"]
+        request.session["nome"] = usuario["nome"]
+        request.session["empresas"] = empresas
+        request.session["deve_trocar_senha"] = bool(usuario["deve_trocar_senha"])
+        # Uma empresa só: entra direto nela. Mais de uma: tela de escolha.
+        request.session["empresa_ativa"] = empresas[0] if len(empresas) == 1 else None
 
-    if deve_trocar_senha:
+    if equipe_ok:
+        _registrar_acesso(email, funcionario["nome"], "equipe")
+        request.session["funcionario_id"] = funcionario["id"]
+        request.session["funcionario_nome"] = funcionario["nome"]
+        request.session["funcionario_deve_trocar_senha"] = bool(funcionario["deve_trocar_senha"])
+        if funcionario["deve_trocar_senha"]:
+            return {"ok": True, "destino": "trocar-senha.html?equipe"}
+        return {"ok": True, "destino": "equipe-atendimento.html"}
+
+    if request.session["deve_trocar_senha"]:
         return {"ok": True, "destino": "trocar-senha.html"}
     return {"ok": True, "destino": _destino_cliente(request)}
 
@@ -237,7 +258,7 @@ async def trocar_senha(request: Request):
     # só o aviso flutuante some. Trocou aqui, não aparece mais em nenhum
     # login futuro — mas se só fechar sem trocar, volta a aparecer na
     # próxima vez que entrar (deve_trocar_senha continua 1 no banco).
-    request.session["deve_trocar_senha"] = False
+    _troca_concluida_na_sessao(request)
     return {"ok": True, "destino": _destino_cliente(request)}
 
 
@@ -269,41 +290,6 @@ async def logout(request: Request):
 # (funcionario_id, não usuario_id) mesmo dividindo o mesmo cookie —
 # nenhuma rota do cliente aceita sessão de funcionário nem vice-versa.
 
-@app.post("/api/equipe/login")
-async def equipe_login(request: Request):
-    corpo = await request.json()
-    email = str(corpo.get("usuario", "")).strip().lower()
-    senha = str(corpo.get("senha", ""))
-
-    if not email or not senha or len(email) > TAMANHO_MAXIMO_EMAIL:
-        return JSONResponse({"erro": "Informe usuário e senha."}, status_code=400)
-
-    ip = _ip_cliente(request)
-    if login_bloqueado(email, ip):
-        return JSONResponse(
-            {"erro": "Muitas tentativas. Aguarde alguns minutos e tente de novo."},
-            status_code=429,
-        )
-
-    with obter_conexao() as conexao:
-        funcionario = conexao.execute(
-            "SELECT id, nome, senha_hash, deve_trocar_senha FROM funcionarios WHERE email = ?", (email,)
-        ).fetchone()
-
-    if not await run_in_threadpool(verificar_senha, senha, funcionario["senha_hash"] if funcionario else None):
-        registrar_falha_login(email, ip)
-        return JSONResponse({"erro": "Usuário ou senha incorretos."}, status_code=401)
-
-    limpar_falhas_login(email)
-    _registrar_acesso(email, funcionario["nome"], "equipe")
-    request.session["funcionario_id"] = funcionario["id"]
-    request.session["funcionario_nome"] = funcionario["nome"]
-    request.session["funcionario_deve_trocar_senha"] = bool(funcionario["deve_trocar_senha"])
-    if funcionario["deve_trocar_senha"]:
-        return {"ok": True, "destino": "trocar-senha.html?equipe"}
-    return {"ok": True, "destino": "equipe-atendimento.html"}
-
-
 @app.post("/api/equipe/trocar-senha")
 async def equipe_trocar_senha(request: Request):
     if not _tem_sessao_equipe(request):
@@ -318,16 +304,28 @@ async def equipe_trocar_senha(request: Request):
     if erro:
         return erro
 
-    request.session["funcionario_deve_trocar_senha"] = False
+    _troca_concluida_na_sessao(request)
     return {"ok": True, "destino": "equipe-atendimento.html"}
 
 
 @app.get("/equipe/logout")
 async def equipe_logout(request: Request):
-    request.session.pop("funcionario_id", None)
-    request.session.pop("funcionario_nome", None)
-    request.session.pop("funcionario_deve_trocar_senha", None)
-    return RedirectResponse("/pages/equipe-login.html", status_code=303)
+    request.session.clear()
+    return RedirectResponse("/pages/login.html", status_code=303)
+
+
+# A tela de login da equipe virou a mesma do cliente; o endereço antigo
+# continua funcionando pra quem salvou nos favoritos.
+@app.get("/pages/equipe-login.html")
+async def equipe_login_antigo():
+    return RedirectResponse("/pages/login.html", status_code=303)
+
+
+def _troca_concluida_na_sessao(request: Request) -> None:
+    """A senha é uma só por e-mail (ver _trocar_senha_da_conta): trocou
+    numa área, a outra também sai do modo de troca obrigatória."""
+    request.session["deve_trocar_senha"] = False
+    request.session["funcionario_deve_trocar_senha"] = False
 
 
 def _tem_sessao_equipe(request: Request) -> bool:
@@ -336,7 +334,7 @@ def _tem_sessao_equipe(request: Request) -> bool:
 
 def _guarda_equipe(request: Request) -> RedirectResponse | None:
     if not _tem_sessao_equipe(request):
-        return RedirectResponse("/pages/equipe-login.html", status_code=303)
+        return RedirectResponse("/pages/login.html", status_code=303)
     return None
 
 
@@ -1764,11 +1762,14 @@ async def _trocar_senha_da_conta(
         return JSONResponse({"erro": "A nova senha precisa ser diferente da atual."}, status_code=400)
 
     novo_hash = await run_in_threadpool(gerar_hash, nova_senha)
+    # Uma senha por e-mail: se a mesma pessoa tem conta de cliente e de
+    # equipe (login único), as duas mudam juntas.
     with obter_conexao() as conexao:
-        conexao.execute(
-            f"UPDATE {tabela} SET senha_hash = ?, deve_trocar_senha = 0 WHERE id = ?",
-            (novo_hash, conta_id),
-        )
+        for tabela_conta in ("usuarios", "funcionarios"):
+            conexao.execute(
+                f"UPDATE {tabela_conta} SET senha_hash = ?, deve_trocar_senha = 0 WHERE email = ?",
+                (novo_hash, conta["email"]),
+            )
     return None
 
 
@@ -1787,9 +1788,18 @@ def _enviar_link_redefinicao(tipo: str, email: str) -> None:
         print("AVISO: pedido de redefinição de senha recebido, mas o SMTP não está configurado "
               "(SMTP_USUARIO/SMTP_SENHA) — nenhum e-mail foi enviado. Ver backend/.env.example.")
         return
-    tabela = "funcionarios" if tipo == "equipe" else "usuarios"
+    # Login único: procura primeiro na área pedida e depois na outra. Como
+    # a senha é uma só por e-mail, redefinir uma conta vale pras duas.
+    ordem = (("equipe", "funcionarios"), ("cliente", "usuarios"))
+    if tipo != "equipe":
+        ordem = ordem[::-1]
+    conta = None
     with obter_conexao() as conexao:
-        conta = conexao.execute(f"SELECT id, email, nome FROM {tabela} WHERE email = ?", (email,)).fetchone()
+        for tipo_conta, tabela in ordem:
+            conta = conexao.execute(f"SELECT id, email, nome FROM {tabela} WHERE email = ?", (email,)).fetchone()
+            if conta:
+                tipo = tipo_conta
+                break
     if not conta:
         return
     token = emitir_token_redefinicao(tipo, conta["id"])
@@ -1850,7 +1860,7 @@ async def redefinir_senha(request: Request):
     if email:
         # Provou que é dono da caixa de e-mail — destrava o login dele.
         limpar_falhas_login(email)
-    return {"ok": True, "destino": "equipe-login.html" if tipo == "equipe" else "login.html"}
+    return {"ok": True, "destino": "login.html"}
 
 # --- Painel da equipe: detalhe e resposta de solicitação ----------------
 # Tudo aqui exige sessão de FUNCIONÁRIO (_tem_sessao_equipe) — sessão de

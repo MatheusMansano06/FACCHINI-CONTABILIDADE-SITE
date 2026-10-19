@@ -177,6 +177,11 @@
         </button>
 
         <div class="portal__dropdown" role="menu" hidden data-dropdown-usuario>
+          {% if request.session.get("usuario_id") %}
+          <a role="menuitem" href="portal-inicio.html">
+            <svg class="icone" aria-hidden="true"><use href="#i-chevron"/></svg> Ver portal como cliente
+          </a>
+          {% endif %}
           <a role="menuitem" href="/equipe/logout">
             <svg class="icone" aria-hidden="true"><use href="#i-fechar"/></svg> Sair
           </a>

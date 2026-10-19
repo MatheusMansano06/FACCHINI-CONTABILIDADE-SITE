@@ -43,7 +43,7 @@ backend/
   indexar_contatos.py, create_user.py, criar_usuarios_em_massa.py,
   criar_funcionario.py  scripts de administrador para criar contas
 pages/
-  login.html, equipe-login.html, selecionar-empresa.html
+  login.html            login único (cliente e equipe), selecionar-empresa.html
   portal-*.html         páginas do portal (templates Jinja2, exigem sessão)
   equipe-atendimento.html  painel da equipe
   politica-de-privacidade.html
@@ -64,8 +64,10 @@ ver detalhes de execução e publicação em [docs/DEPLOY.md](docs/DEPLOY.md).
   dentro do servidor — não existe tela de "criar conta" nem endpoint público
   para isso. Decisão de produto já tomada. Cada conta recebe uma senha
   temporária aleatória e troca no primeiro acesso.
-- **Dois logins separados:** cliente (`pages/login.html`, vê só as próprias
-  empresas) e equipe (`pages/equipe-login.html`, vê as solicitações de todos).
+- **Login único** (`pages/login.html`): a senha é conferida nas contas de
+  cliente e de equipe. Funcionário vai pro painel da equipe (vê as solicitações
+  de todos), cliente vai pro portal (só as próprias empresas). Quem tem os dois
+  com o mesmo e-mail entra nos dois e alterna pelo menu; a senha é uma só.
 - **Banco:** SQLite, um arquivo por ambiente — local em `backend/facchini.db`,
   no Railway em `/data/facchini.db` (volume). Não entra no controle de versão.
 - **Sessão:** cookie assinado (`itsdangerous`, via `SessionMiddleware` do

@@ -10,7 +10,7 @@
 
 const CHAVE_TOKEN = 'facchini_token_redefinicao';
 const TAMANHO_MINIMO = 8;
-const DESTINOS_PERMITIDOS = ['login.html', 'equipe-login.html'];
+const DESTINOS_PERMITIDOS = ['login.html'];
 
 function lerToken() {
   const doLink = new URLSearchParams(window.location.hash.slice(1)).get('token');

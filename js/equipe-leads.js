@@ -26,7 +26,7 @@ function iniciarMarcarContatado() {
         });
         const dados = await resposta.json().catch(() => ({}));
         if (resposta.status === 401) {
-          window.location.href = 'equipe-login.html';
+          window.location.href = 'login.html';
           return;
         }
         if (!resposta.ok) {

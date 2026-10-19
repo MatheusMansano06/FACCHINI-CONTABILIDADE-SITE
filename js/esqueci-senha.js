@@ -1,7 +1,7 @@
 /* =============================================================
    "Esqueceu sua senha?" — pede o link de redefinição por e-mail.
-   Serve para cliente e equipe: ?equipe na URL manda tipo "equipe"
-   e o "voltar" aponta pro login da equipe.
+   Serve para cliente e equipe: o servidor descobre de quem é o e-mail
+   (login único em pages/login.html).
    ============================================================= */
 'use strict';
 
@@ -12,12 +12,6 @@ const MENSAGEM_NEUTRA =
 function iniciarFormulario() {
   const form = document.querySelector('[data-formulario-esqueci]');
   if (!form) return;
-
-  const ehEquipe = new URLSearchParams(window.location.search).has('equipe');
-  if (ehEquipe) {
-    const voltar = form.querySelector('[data-voltar-login]');
-    if (voltar) voltar.href = 'equipe-login.html';
-  }
 
   const campo = form.elements.email;
   const retorno = form.querySelector('[data-retorno]');
@@ -48,7 +42,7 @@ function iniciarFormulario() {
       const resposta = await fetch('/api/esqueci-senha', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: campo.value.trim(), tipo: ehEquipe ? 'equipe' : 'cliente' }),
+        body: JSON.stringify({ email: campo.value.trim() }),
       });
       const dados = await resposta.json().catch(() => ({}));
 
