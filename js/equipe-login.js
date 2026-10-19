@@ -29,6 +29,12 @@ function iniciarFormulario() {
   const retorno = form.querySelector('[data-retorno-login]');
   const botaoEntrar = form.querySelector('.acesso__entrar');
 
+  // Veio da tela de "definir nova senha" (js/redefinir-senha.js).
+  if (new URLSearchParams(window.location.search).has('senha-redefinida')) {
+    retorno.textContent = 'Senha definida. Entre com a sua nova senha.';
+    history.replaceState(null, '', window.location.pathname);
+  }
+
   const validar = (campo, mensagemVazio) => {
     const ok = campo.value.trim().length > 0;
     const alvoErro = document.querySelector(`[data-erro-de="${campo.name}"]`);

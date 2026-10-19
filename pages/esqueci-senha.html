@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="robots" content="noindex, nofollow">
+
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               img-src 'self' data:;
+               font-src 'self';
+               style-src 'self';
+               script-src 'self';
+               connect-src 'self';
+               form-action 'self';
+               base-uri 'self';
+               object-src 'none';
+               frame-src 'none';
+               upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+<title>Esqueceu sua senha? | Facchini Assessoria Contábil</title>
+<meta name="theme-color" content="#0B1E33">
+
+<link rel="icon" href="../assets/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+
+<link rel="preload" href="../assets/fonts/archivo-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/base.css">
+<!-- Mesma casca visual do login (painel + foto). acesso-senha.css só
+     acrescenta o que estas duas telas de senha têm a mais. -->
+<link rel="stylesheet" href="../css/login.css">
+<link rel="stylesheet" href="../css/acesso-senha.css">
+</head>
+
+<body>
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-email" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/>
+  </symbol>
+  <symbol id="i-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 12h15m-5.5-5.5L19 12l-5.5 5.5"/>
+  </symbol>
+</svg>
+
+<main class="acesso" id="conteudo">
+  <div class="acesso__grade">
+
+    <section class="acesso__painel-formulario" aria-label="Recuperar acesso">
+      <div class="acesso__conteudo">
+
+        <a class="acesso__marca" href="https://www.facchiniassessoria.com.br/" aria-label="Facchini Assessoria Contábil — ir para o site">
+          <img class="acesso__logo" src="../assets/logo/facchini-logo.webp"
+               width="640" height="133" alt="Facchini Assessoria Contábil">
+        </a>
+
+        <div class="acesso__cabecalho">
+          <span class="acesso__linha-ouro" aria-hidden="true"></span>
+          <h1 class="acesso__titulo"><strong>Esqueceu</strong> sua senha?</h1>
+          <p class="acesso__subtitulo">Informe o e-mail cadastrado e enviaremos um link para você definir uma nova senha. Vale também para o primeiro acesso.</p>
+        </div>
+
+        <!-- Só manda link pra conta que já existe (criada pelo escritório) —
+             e a resposta é sempre a mesma, exista o e-mail ou não. Envio via
+             fetch em js/esqueci-senha.js. ?equipe na URL = conta da equipe. -->
+        <form class="acesso__formulario" method="post" action="#" novalidate data-formulario-esqueci>
+
+          <div class="campo" data-bloco-campos>
+            <label for="email">E-mail</label>
+            <div class="campo__caixa">
+              <svg class="icone campo__icone" aria-hidden="true"><use href="#i-email"/></svg>
+              <input type="email" id="email" name="email" autocomplete="email" inputmode="email"
+                     placeholder="seu@email.com.br" required maxlength="254" aria-describedby="erro-email">
+            </div>
+            <p class="campo__erro" id="erro-email" data-erro-de="email"></p>
+          </div>
+
+          <button class="botao botao--ouro botao--cheio botao--grande acesso__entrar" type="submit">
+            Enviar link
+            <svg class="icone" aria-hidden="true"><use href="#i-seta"/></svg>
+          </button>
+
+          <p class="acesso__retorno" role="status" aria-live="polite" data-retorno></p>
+
+          <a class="acesso__esqueci" href="login.html" data-voltar-login>Voltar para o login</a>
+        </form>
+
+        <div class="acesso__rodape">
+          <span class="acesso__linha-ouro" aria-hidden="true"></span>
+          <p class="acesso__tagline">Contabilidade<br>que impulsiona o seu amanhã</p>
+        </div>
+
+      </div>
+    </section>
+
+    <aside class="acesso__painel-foto">
+      <img class="acesso__foto"
+           src="../assets/images/login-painel.webp"
+           srcset="../assets/images/login-painel-560.webp 560w,
+                   ../assets/images/login-painel-860.webp 860w,
+                   ../assets/images/login-painel.webp 1122w"
+           sizes="50vw"
+           width="1122" height="1402" loading="lazy" decoding="async" alt="">
+      <div class="acesso__vinheta" aria-hidden="true"></div>
+
+      <p class="acesso__marca-vertical" aria-hidden="true">Facchini <span>•</span> Desde 2009</p>
+
+      <p class="acesso__rodape-foto" aria-hidden="true">
+        <span class="acesso__linha-ouro"></span>
+        Crescimento<br>com base sólida
+      </p>
+    </aside>
+
+  </div>
+</main>
+
+<script src="../js/esqueci-senha.js" defer></script>
+</body>
+</html>

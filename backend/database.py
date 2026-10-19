@@ -111,3 +111,36 @@ def inicializar_schema() -> None:
                 UNIQUE (identificador_acessorias, vencimento, valor, competencia)
             )
         """)
+
+        # Limite de tentativas (login e "esqueceu sua senha?") — no banco
+        # em vez de em memória pra valer entre restarts e entre workers.
+        # Uma linha por evento; "chave" diz de quê/de quem (ex.:
+        # "login:email", "login-ip:1.2.3.4"). Ver auth.py. Pra destravar
+        # alguém na mão: DELETE FROM tentativas_acesso WHERE chave = 'login:email'.
+        conexao.execute("""
+            CREATE TABLE IF NOT EXISTS tentativas_acesso (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                chave TEXT NOT NULL,
+                momento REAL NOT NULL
+            )
+        """)
+        conexao.execute("CREATE INDEX IF NOT EXISTS idx_tentativas_chave ON tentativas_acesso (chave, momento)")
+
+        # Links de "esqueceu sua senha?" / primeiro acesso por e-mail. Só o
+        # SHA-256 do token fica aqui — o token mesmo só existe no e-mail.
+        # Uso único (a linha é apagada ao usar) e um por conta (pedir de
+        # novo apaga o anterior). conta_id aponta pra usuarios ou
+        # funcionarios conforme o tipo — sem FK porque são duas tabelas.
+        conexao.execute("""
+            CREATE TABLE IF NOT EXISTS tokens_redefinicao_senha (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tipo TEXT NOT NULL CHECK (tipo IN ('cliente', 'equipe')),
+                conta_id INTEGER NOT NULL,
+                token_hash TEXT NOT NULL UNIQUE,
+                expira_em REAL NOT NULL,
+                criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+        conexao.execute(
+            "CREATE INDEX IF NOT EXISTS idx_tokens_redefinicao_conta ON tokens_redefinicao_senha (tipo, conta_id)"
+        )

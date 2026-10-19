@@ -60,6 +60,53 @@ function iniciarMenuUsuario() {
   });
 }
 
+/* ---------------- campo "senha atual" (troca de senha fora do 1º acesso) ----------------
+   Na troca obrigatória logo depois de entrar com a senha provisória o
+   servidor não pede a senha atual (a pessoa acabou de digitá-la). Fora
+   disso ele responde exigeSenhaAtual — e aí o campo aparece. Se a página
+   já trouxer o campo no HTML (input name="senhaAtual", opcionalmente num
+   bloco [data-bloco-senha-atual] com hidden), usa ele; senão cria aqui
+   mesmo, sem innerHTML, com a mesma estrutura dos outros campos. */
+function garantirCampoSenhaAtual(form) {
+  const existente = form.elements.senhaAtual;
+  if (existente) {
+    const bloco = existente.closest('[data-bloco-senha-atual]');
+    if (bloco) bloco.hidden = false;
+    return existente;
+  }
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const campo = document.createElement('div');
+  campo.className = 'campo';
+  campo.setAttribute('data-bloco-senha-atual', '');
+
+  const rotulo = document.createElement('label');
+  rotulo.htmlFor = 'aviso-senha-atual';
+  rotulo.textContent = 'Senha atual';
+
+  const caixa = document.createElement('div');
+  caixa.className = 'campo__caixa';
+  const icone = document.createElementNS(svgNS, 'svg');
+  icone.setAttribute('class', 'icone campo__icone');
+  icone.setAttribute('aria-hidden', 'true');
+  const uso = document.createElementNS(svgNS, 'use');
+  uso.setAttribute('href', '#i-cadeado');
+  icone.appendChild(uso);
+
+  const entrada = document.createElement('input');
+  entrada.type = 'password';
+  entrada.id = 'aviso-senha-atual';
+  entrada.name = 'senhaAtual';
+  entrada.autocomplete = 'current-password';
+  entrada.placeholder = 'Digite sua senha atual';
+  entrada.required = true;
+
+  caixa.append(icone, entrada);
+  campo.append(rotulo, caixa);
+  form.insertBefore(campo, form.querySelector('.campo'));
+  return entrada;
+}
+
 /* ------------------------- aviso flutuante: trocar senha ------------------------- */
 function iniciarAvisoSenha() {
   const aviso = document.querySelector('[data-aviso-senha]');
@@ -81,13 +128,23 @@ function iniciarAvisoSenha() {
   const form = aviso.querySelector('[data-formulario-troca-senha]');
   const retorno = aviso.querySelector('[data-retorno-troca-senha]');
   const botaoSalvar = form.querySelector('button[type="submit"]');
+  if (form.hasAttribute('data-exige-senha-atual')) garantirCampoSenhaAtual(form);
 
   form.addEventListener('submit', async (evento) => {
     evento.preventDefault();
 
     const novaSenha = form.elements.novaSenha.value;
     const confirmacao = form.elements.confirmacao.value;
+    const campoAtual = form.elements.senhaAtual;
+    const pedeSenhaAtual = Boolean(campoAtual && !campoAtual.closest('[hidden]'));
+    const senhaAtual = pedeSenhaAtual ? campoAtual.value : '';
 
+    if (pedeSenhaAtual && !senhaAtual) {
+      retorno.textContent = 'Informe sua senha atual.';
+      retorno.classList.add('esta-erro');
+      campoAtual.focus();
+      return;
+    }
     if (novaSenha.length < 8) {
       retorno.textContent = 'Use uma senha com pelo menos 8 caracteres.';
       retorno.classList.add('esta-erro');
@@ -107,7 +164,7 @@ function iniciarAvisoSenha() {
       const resposta = await fetch('/api/equipe/trocar-senha', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ novaSenha, confirmacao }),
+        body: JSON.stringify(pedeSenhaAtual ? { senhaAtual, novaSenha, confirmacao } : { novaSenha, confirmacao }),
       });
       const dados = await resposta.json().catch(() => ({}));
 
@@ -116,6 +173,11 @@ function iniciarAvisoSenha() {
         return;
       }
 
+      if (dados.exigeSenhaAtual) {
+        const campo = garantirCampoSenhaAtual(form);
+        if (pedeSenhaAtual) campo.value = '';
+        campo.focus();
+      }
       retorno.textContent = dados.erro || 'Não foi possível salvar. Tente de novo.';
       retorno.classList.add('esta-erro');
     } catch {

@@ -1,0 +1,21 @@
+/* =============================================================
+   Telas de senha (esqueci-senha.html e redefinir-senha.html).
+   Carregado DEPOIS de login.css — reaproveita toda a casca dele e
+   só acrescenta o que essas duas telas têm a mais.
+   ============================================================= */
+
+.acesso__retorno.esta-ok {
+  color: var(--navy-900);
+  text-align: left;
+  line-height: 1.5;
+}
+
+/* Agrupa os campos + botão pra esconder tudo de uma vez quando o link
+   é inválido ou a senha já foi salva. */
+.acesso__campos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-5);
+}
+
+[hidden] { display: none !important; }
