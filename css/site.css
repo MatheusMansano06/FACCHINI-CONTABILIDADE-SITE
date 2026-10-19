@@ -835,12 +835,6 @@
   gap: 0.15rem;
 }
 
-.fundador__linha {
-  font-size: var(--t-xs);
-  font-style: italic;
-  color: var(--ouro);
-}
-
 .fundador__nome {
   font-family: var(--fonte-titulo);
   font-size: var(--t-sm);
